@@ -1,0 +1,119 @@
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import AgentForm from '../../components/forms/AgentForm.jsx';
+import DataTable from '../../components/DataTable.jsx';
+import Page from '../../components/Page.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Modal from '../../components/ui/Modal.jsx';
+import StatusBadge from '../../components/StatusBadge.jsx';
+import { useToast } from '../../components/ui/Toast.jsx';
+import { useAgents, useAgentMutations, unwrapError } from '../../hooks/useCrm.js';
+
+export default function Agents() {
+  const { notify } = useToast();
+  const [modal, setModal] = useState({ open: false, agent: null });
+  const { data: agents = [], isLoading, isError, error } = useAgents();
+  const { create, update, remove, toggle, resetPassword } = useAgentMutations();
+
+  const columns = [
+    { key: 'name', label: 'Agent' },
+    { key: 'mobile', label: 'Mobile' },
+    { key: 'telegram', label: 'Telegram' },
+    { key: 'merchants', label: 'Merchants' },
+    { key: 'accounts', label: 'Accounts' },
+    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+  ];
+
+  const saveAgent = async (values) => {
+    try {
+      if (modal.agent) {
+        await update.mutateAsync({ id: modal.agent.id, values });
+        notify('Agent updated');
+      } else {
+        await create.mutateAsync(values);
+        notify('Agent created');
+      }
+      setModal({ open: false, agent: null });
+    } catch (err) {
+      notify(unwrapError(err), 'error');
+    }
+  };
+
+  const onToggle = async (agent) => {
+    try {
+      await toggle.mutateAsync(agent.id);
+      notify('Agent status updated');
+    } catch (err) {
+      notify(unwrapError(err), 'error');
+    }
+  };
+
+  const onDelete = async (agent) => {
+    try {
+      await remove.mutateAsync(agent.id);
+      notify('Agent deleted');
+    } catch (err) {
+      notify(unwrapError(err), 'error');
+    }
+  };
+
+  const onResetPassword = async () => {
+    if (!agents.length) {
+      notify('No agents to reset', 'error');
+      return;
+    }
+    try {
+      await resetPassword.mutateAsync({ id: agents[0].id });
+      notify('Agent password reset');
+    } catch (err) {
+      notify(unwrapError(err), 'error');
+    }
+  };
+
+  return (
+    <>
+      <Page
+        title="Agents"
+        eyebrow="Admin control"
+        actions={
+          <>
+            <Button onClick={() => setModal({ open: true, agent: null })}>
+              <Plus size={16} /> Create Agent
+            </Button>
+            <Button variant="secondary" onClick={onResetPassword}>Reset Password</Button>
+          </>
+        }
+      >
+        {isLoading ? (
+          <div className="surface rounded-3xl p-10 text-center text-sm font-semibold text-slate-500">Loading agents...</div>
+        ) : isError ? (
+          <div className="surface rounded-3xl p-10 text-center text-sm font-semibold text-rose-600">
+            {unwrapError(error)}
+          </div>
+        ) : (
+          <DataTable
+            rows={agents}
+            columns={columns}
+            filters={['Status', 'Date', 'Region']}
+            exportName="agents"
+            onEdit={(agent) => setModal({ open: true, agent })}
+            onToggleStatus={onToggle}
+            onDelete={onDelete}
+          />
+        )}
+      </Page>
+      <Modal
+        open={modal.open}
+        title={modal.agent ? 'Edit Agent' : 'Create Agent'}
+        description="Manage profile, contact, and operational notes."
+        onClose={() => setModal({ open: false, agent: null })}
+      >
+        <AgentForm
+          initialValues={modal.agent}
+          onSubmit={saveAgent}
+          submitLabel={modal.agent ? 'Update Agent' : 'Create Agent'}
+        />
+      </Modal>
+    </>
+  );
+}

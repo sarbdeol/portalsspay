@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py makemigrations --check --dry-run)",
+      "Bash(python manage.py makemigrations crm)",
+      "Bash(python manage.py migrate)"
+    ]
+  }
+}

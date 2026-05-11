@@ -1,0 +1,23 @@
+[Unit]
+Description=SSPay CRM Django API (gunicorn)
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=__APP_DIR__/backend
+EnvironmentFile=/etc/sspay-crm.env
+ExecStart=__APP_DIR__/backend/venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8001 \
+    --access-logfile - \
+    --error-logfile - \
+    config.wsgi:application
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
