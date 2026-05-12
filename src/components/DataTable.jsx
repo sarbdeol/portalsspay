@@ -1,4 +1,4 @@
-import { Copy, Download, FileText, Search } from 'lucide-react';
+import { Copy, Download, Eye, FileText, Search } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useMemo, useState } from 'react';
@@ -6,13 +6,13 @@ import { useDebounce } from '../hooks/useDebounce.js';
 import Button from './ui/Button.jsx';
 import StatusBadge from './StatusBadge.jsx';
 
-export default function DataTable({ columns, rows, readOnly = false, onEdit, onToggleStatus, onDelete, onCopyLogin, exportName = 'rdpanel-export' }) {
+export default function DataTable({ columns, rows, readOnly = false, onEdit, onToggleStatus, onDelete, onCopyLogin, onView, onRowAction, rowAction, exportName = 'rdpanel-export' }) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState(columns[0]?.key);
   const [page, setPage] = useState(1);
   const debounced = useDebounce(query);
   const pageSize = 6;
-  const hasActions = !readOnly && Boolean(onEdit || onToggleStatus || onDelete || onCopyLogin);
+  const hasActions = !readOnly && Boolean(onEdit || onToggleStatus || onDelete || onCopyLogin || onView || onRowAction);
 
   const filtered = useMemo(() => {
     const normalized = debounced.toLowerCase();
@@ -108,11 +108,13 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
                 ))}
                 {hasActions ? (
                   <td className="px-5 py-4">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      {onView ? <Button variant="ghost" className="h-9 px-3" onClick={() => onView(row)}><Eye size={14} /> View</Button> : null}
                       {onEdit ? <Button variant="ghost" className="h-9 px-3" onClick={() => onEdit(row)}>Edit</Button> : null}
                       {onToggleStatus ? <Button variant="ghost" className="h-9 px-3" onClick={() => onToggleStatus(row)}>{row.status === 'Active' ? 'Disable' : 'Activate'}</Button> : null}
                       {onDelete ? <Button variant="ghost" className="h-9 px-3 text-rose-600" onClick={() => onDelete(row)}>Delete</Button> : null}
                       {onCopyLogin ? <Button variant="ghost" className="h-9 px-3 text-teal-700 dark:text-teal-300" onClick={() => onCopyLogin(row)}><Copy size={14} /> Copy Login</Button> : null}
+                      {onRowAction ? <Button variant="ghost" className="h-9 px-3 text-emerald-700 dark:text-emerald-300" onClick={() => onRowAction(row)}>{rowAction?.icon || null}{rowAction?.label || 'Action'}</Button> : null}
                     </div>
                   </td>
                 ) : null}

@@ -1,19 +1,23 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
-import { Banknote, Building2, KeyRound, Link2, MessageSquare, ShieldCheck, Wallet } from 'lucide-react';
+import { Banknote, Building2, CreditCard, KeyRound, Link2, MessageSquare, ShieldCheck, Wallet } from 'lucide-react';
 import Button from '../ui/Button.jsx';
 import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
 
-const ACCOUNT_TYPES = ['Savings', 'Current', 'Business'];
+const ACCOUNT_TYPES = ['Savings Account', 'Current Account', 'Corp Account'];
 const UPI_APPS = ['PhonePe', 'Google Pay', 'Paytm', 'BHIM', 'Amazon Pay', 'Other'];
 const STATUSES = ['Active', 'Disabled', 'Pending', 'Hold'];
 const PRIORITIES = ['High', 'Medium', 'Low'];
 
 const schema = z.object({
   bankName: z.string().min(2, 'Bank name is required'),
-  holderName: z.string().min(2, 'Holder name is required'),
+  holderName: z.string().optional(),
+  companyName: z.string().optional(),
+  companyPan: z.string().optional(),
+  gstNumber: z.string().optional(),
+  authorizedSignatory: z.string().optional(),
   accountNumber: z.string().min(8, 'Account number is required'),
   ifsc: z.string().min(11, 'IFSC code is required'),
   branch: z.string().optional(),
@@ -29,6 +33,11 @@ const schema = z.object({
   transactionPassword: z.string().optional(),
   mpin: z.string().optional(),
   tpin: z.string().optional(),
+  cardNumber: z.string().optional(),
+  cardHolderName: z.string().optional(),
+  cardExpiry: z.string().optional(),
+  cardCvv: z.string().optional(),
+  atmPin: z.string().optional(),
   dailyLimit: z.coerce.number().optional(),
   monthlyLimit: z.coerce.number().optional(),
   currentUsage: z.coerce.number().optional(),
@@ -75,10 +84,14 @@ export default function BankAccountForm({
   const baseDefaults = {
     bankName: '',
     holderName: '',
+    companyName: '',
+    companyPan: '',
+    gstNumber: '',
+    authorizedSignatory: '',
     accountNumber: '',
     ifsc: '',
     branch: '',
-    accountType: 'Current',
+    accountType: 'Savings Account',
     bankEmail: '',
     upiId: '',
     upiApp: 'PhonePe',
@@ -90,6 +103,11 @@ export default function BankAccountForm({
     transactionPassword: '',
     mpin: '',
     tpin: '',
+    cardNumber: '',
+    cardHolderName: '',
+    cardExpiry: '',
+    cardCvv: '',
+    atmPin: '',
     dailyLimit: 0,
     monthlyLimit: 0,
     currentUsage: 0,
@@ -106,7 +124,7 @@ export default function BankAccountForm({
     notes: '',
   };
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       ...baseDefaults,
@@ -116,6 +134,9 @@ export default function BankAccountForm({
       tags: tagsToString(initialValues?.tags),
     },
   });
+
+  const accountType = useWatch({ control, name: 'accountType' });
+  const isCorp = accountType === 'Corp Account';
 
   const submit = (values) => {
     const normalized = {
@@ -128,16 +149,33 @@ export default function BankAccountForm({
 
   return (
     <form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2">
-      <SectionHeading icon={Building2} title="Basic information" hint="Bank, holder and branch details" />
+      <SectionHeading icon={Building2} title="Basic information" hint="Bank, account type and branch" />
       <Input label="Bank Name" {...register('bankName')} error={errors.bankName?.message} />
-      <Input label="Account Holder Name" {...register('holderName')} error={errors.holderName?.message} />
+      <Select label="Account Type" options={ACCOUNT_TYPES} {...register('accountType')} />
+      {isCorp ? (
+        <>
+          <Input label="Company Name" {...register('companyName')} />
+          <Input label="Authorized Signatory" {...register('authorizedSignatory')} />
+        </>
+      ) : (
+        <>
+          <Input label="Account Holder Name" {...register('holderName')} />
+        </>
+      )}
       <Input label="Account Number" {...register('accountNumber')} error={errors.accountNumber?.message} />
       <Input label="IFSC Code" {...register('ifsc')} error={errors.ifsc?.message} />
       <Input label="Branch Name" {...register('branch')} />
-      <Select label="Account Type" options={ACCOUNT_TYPES} {...register('accountType')} />
       <div className="md:col-span-2">
         <Input label="Email Registered with Bank" type="email" placeholder="holder@example.com" {...register('bankEmail')} error={errors.bankEmail?.message} />
       </div>
+
+      {isCorp ? (
+        <>
+          <SectionHeading icon={Building2} title="Corporate identity" hint="Tax & regulatory identifiers" />
+          <Input label="Company PAN" {...register('companyPan')} />
+          <Input label="GST Number" {...register('gstNumber')} />
+        </>
+      ) : null}
 
       <SectionHeading icon={Wallet} title="UPI details" hint="Linked UPI handle and app" />
       <Input label="UPI ID" {...register('upiId')} />
@@ -152,6 +190,13 @@ export default function BankAccountForm({
       <Input label="Transaction Password" type="password" {...register('transactionPassword')} />
       <Input label="MPIN" type="password" {...register('mpin')} />
       <Input label="TPIN" type="password" {...register('tpin')} />
+
+      <SectionHeading icon={CreditCard} title="Debit / ATM card" hint="Card linked to this account" />
+      <Input label="Card Number" {...register('cardNumber')} />
+      <Input label="Cardholder Name" {...register('cardHolderName')} />
+      <Input label="Expiry (MM/YY)" placeholder="08/29" {...register('cardExpiry')} />
+      <Input label="CVV" type="password" {...register('cardCvv')} />
+      <Input label="ATM PIN" type="password" {...register('atmPin')} />
 
       <SectionHeading icon={Banknote} title="Limits & transactions" hint="Daily, monthly and usage caps" />
       <Input label="Daily Transaction Limit" type="number" {...register('dailyLimit')} />

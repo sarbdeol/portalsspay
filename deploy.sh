@@ -146,6 +146,54 @@ for site in portal.sspay.online api.sspay.online; do
     fi
     ln -sf "$target" "/etc/nginx/sites-enabled/${site}"
 done
+
+# Patch api.sspay.online to ensure a /media/ location block exists in EVERY
+# server{} block — certbot may have duplicated the server block before we
+# added media support, so the SSL variant could be missing the alias.
+api_conf="/etc/nginx/sites-available/api.sspay.online"
+if [[ -f "$api_conf" ]]; then
+    python3 - <<'PY'
+import re
+
+path = "/etc/nginx/sites-available/api.sspay.online"
+with open(path) as f:
+    text = f.read()
+
+media_block = """    location /media/ {
+        alias /var/lib/sspay-crm/media/;
+        access_log off;
+        add_header X-Content-Type-Options nosniff;
+    }
+
+"""
+
+# Walk through each `server { ... }` block. If it doesn't contain `location /media/`,
+# inject the block right before the first `location / {` (the proxy_pass catch-all).
+def patch_block(match):
+    block = match.group(0)
+    if "location /media/" in block:
+        return block
+    return re.sub(
+        r"(\n[ \t]*location / \{)",
+        "\n" + media_block.rstrip("\n") + r"\1",
+        block,
+        count=1,
+    )
+
+# Match each server { ... } including nested braces (one level deep is enough here).
+new_text = re.sub(
+    r"server\s*\{(?:[^{}]|\{[^{}]*\})*\}",
+    patch_block,
+    text,
+)
+
+if new_text != text:
+    with open(path, "w") as f:
+        f.write(new_text)
+    print("Patched /media/ into api.sspay.online nginx config")
+PY
+fi
+
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
 systemctl reload nginx

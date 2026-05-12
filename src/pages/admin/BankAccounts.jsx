@@ -1,7 +1,8 @@
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import { useState } from 'react';
 import AccountCredentialPanel from '../../components/AccountCredentialPanel.jsx';
 import BankAccountForm from '../../components/forms/BankAccountForm.jsx';
+import BankAccountViewModal from '../../components/BankAccountViewModal.jsx';
 import DataTable from '../../components/DataTable.jsx';
 import Page from '../../components/Page.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -9,10 +10,12 @@ import Modal from '../../components/ui/Modal.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAccounts, useAccountMutations, useAgents, useMerchants, unwrapError } from '../../hooks/useCrm.js';
+import { downloadAccountExcel } from '../../utils/accountExport.js';
 
 export default function BankAccounts({ scope = 'admin' }) {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, account: null });
+  const [viewAccount, setViewAccount] = useState(null);
   const params = scope === 'agent' ? { mine: 'true' } : undefined;
   const { data: rows = [], isLoading, isError, error } = useAccounts(params);
   const { data: agents = [] } = useAgents();
@@ -20,8 +23,8 @@ export default function BankAccounts({ scope = 'admin' }) {
   const { create, update, remove, toggle } = useAccountMutations();
 
   const columns = [
-    { key: 'bankName', label: 'Bank' },
-    { key: 'holderName', label: 'Holder' },
+    { key: 'bankName', label: 'Bank', render: (row) => <span className="font-bold">#{row.id} • {row.bankName}</span> },
+    { key: 'accountType', label: 'Type' },
     {
       key: 'accountNumber',
       label: 'Account No.',
@@ -42,7 +45,6 @@ export default function BankAccounts({ scope = 'admin' }) {
         </div>
       ),
     },
-    { key: 'upiApp', label: 'UPI App' },
     { key: 'agent', label: 'Agent', exportable: false },
     { key: 'merchant', label: 'Merchant' },
     { key: 'status', label: 'Status' },
@@ -105,9 +107,12 @@ export default function BankAccounts({ scope = 'admin' }) {
               columns={columns}
               filters={['Bank Name', 'UPI App', 'Status', 'Agent', 'Merchant', 'Date', 'Tags']}
               exportName="bank-accounts"
+              onView={(account) => setViewAccount(account)}
               onEdit={(account) => setModal({ open: true, account })}
               onToggleStatus={onToggle}
               onDelete={onDelete}
+              onRowAction={(account) => downloadAccountExcel(account)}
+              rowAction={{ label: 'Excel', icon: <Download size={14} /> }}
             />
             <div className="grid gap-4 xl:grid-cols-2">
               {rows.map((account) => (
@@ -119,7 +124,7 @@ export default function BankAccounts({ scope = 'admin' }) {
       </Page>
       <Modal
         open={modal.open}
-        title={modal.account ? 'Edit Bank Account' : 'Add Bank Account'}
+        title={modal.account ? `Edit Bank Account #${modal.account.id}` : 'Add Bank Account'}
         description="Manage Indian bank, UPI, limits, credentials, contacts, and login URL."
         onClose={() => setModal({ open: false, account: null })}
       >
@@ -129,9 +134,14 @@ export default function BankAccounts({ scope = 'admin' }) {
           merchants={merchants}
           onSubmit={saveAccount}
           submitLabel={modal.account ? 'Update Account' : 'Create Account'}
-          showAgentSelector={false}
+          showAgentSelector={scope === 'admin' ? false : true}
         />
       </Modal>
+      <BankAccountViewModal
+        open={Boolean(viewAccount)}
+        account={viewAccount}
+        onClose={() => setViewAccount(null)}
+      />
     </>
   );
 }

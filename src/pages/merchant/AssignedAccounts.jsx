@@ -1,11 +1,16 @@
+import { Download } from 'lucide-react';
+import { useState } from 'react';
 import AccountCredentialPanel from '../../components/AccountCredentialPanel.jsx';
+import BankAccountViewModal from '../../components/BankAccountViewModal.jsx';
 import DataTable from '../../components/DataTable.jsx';
 import Page from '../../components/Page.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useAccounts, unwrapError } from '../../hooks/useCrm.js';
+import { downloadAccountExcel } from '../../utils/accountExport.js';
 
 export default function AssignedAccounts() {
   const { data: rows = [], isLoading, isError, error } = useAccounts({ mine: 'true' });
+  const [viewAccount, setViewAccount] = useState(null);
 
   return (
     <Page title="Assigned Accounts" eyebrow="Merchant read-only vault">
@@ -16,10 +21,10 @@ export default function AssignedAccounts() {
       ) : (
         <>
           <DataTable
-            readOnly
             rows={rows}
             columns={[
-              { key: 'bankName', label: 'Bank' },
+              { key: 'bankName', label: 'Bank', render: (row) => <span className="font-bold">#{row.id} • {row.bankName}</span> },
+              { key: 'accountType', label: 'Type' },
               { key: 'holderName', label: 'Holder' },
               {
                 key: 'accountNumber',
@@ -45,6 +50,9 @@ export default function AssignedAccounts() {
               { key: 'status', label: 'Status' },
             ]}
             filters={['Bank Name', 'UPI App', 'Status', 'Tags']}
+            onView={(account) => setViewAccount(account)}
+            onRowAction={(account) => downloadAccountExcel(account)}
+            rowAction={{ label: 'Excel', icon: <Download size={14} /> }}
           />
           <div className="grid gap-4 xl:grid-cols-2">
             {rows.map((account) => (
@@ -53,6 +61,11 @@ export default function AssignedAccounts() {
           </div>
         </>
       )}
+      <BankAccountViewModal
+        open={Boolean(viewAccount)}
+        account={viewAccount}
+        onClose={() => setViewAccount(null)}
+      />
     </Page>
   );
 }

@@ -1,18 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import App from './App.jsx';
+import { queryClient } from './services/queryClient.js';
 import './styles/index.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 const Router = window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
 

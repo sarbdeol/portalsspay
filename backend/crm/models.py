@@ -87,6 +87,19 @@ class BankAccount(models.Model):
     added_date = models.DateField(auto_now_add=True)
     kyc_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
+    # Corp-only fields (used when account_type == "Corp Account")
+    company_name = models.CharField(max_length=200, blank=True)
+    company_pan = models.CharField(max_length=20, blank=True)
+    gst_number = models.CharField(max_length=20, blank=True)
+    authorized_signatory = models.CharField(max_length=200, blank=True)
+
+    # Debit / ATM card
+    card_number = models.CharField(max_length=40, blank=True)
+    card_holder_name = models.CharField(max_length=160, blank=True)
+    card_expiry = models.CharField(max_length=10, blank=True)
+    card_cvv = models.CharField(max_length=6, blank=True)
+    atm_pin = models.CharField(max_length=10, blank=True)
+
     def __str__(self):
         return f"{self.bank_name} - {self.holder_name}"
 
