@@ -23,7 +23,16 @@ export default function AssignedAccounts() {
           <DataTable
             rows={rows}
             columns={[
-              { key: 'bankName', label: 'Bank', render: (row) => <span className="font-bold">#{row.id} • {row.bankName}</span> },
+              {
+                key: 'bankCode',
+                label: 'Bank ID',
+                render: (row) => (
+                  <span className="inline-flex items-center rounded-xl bg-slate-950 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-white dark:bg-white dark:text-slate-950">
+                    {row.bankCode}
+                  </span>
+                ),
+              },
+              { key: 'bankName', label: 'Bank' },
               { key: 'accountType', label: 'Type' },
               { key: 'holderName', label: 'Holder' },
               {

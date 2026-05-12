@@ -38,14 +38,14 @@ export default function BankAccountViewModal({ open, account, onClose }) {
   return (
     <Modal
       open={open}
-      title={`#${account.id} • ${account.bankName}`}
+      title={`${account.bankCode || `#${account.id}`} • ${account.bankName}`}
       description={`${account.accountType || ''} • ${account.holderName || account.companyName || ''}`}
       onClose={onClose}
     >
       <div className="flex flex-wrap items-center gap-2 pb-3">
         <StatusBadge status={account.status} />
-        <span className="rounded-full bg-slate-900/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600 dark:bg-white/10 dark:text-slate-300">
-          ID #{account.id}
+        <span className="inline-flex items-center rounded-xl bg-slate-950 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-white dark:bg-white dark:text-slate-950">
+          {account.bankCode || `BNK-${String(account.id).padStart(4, '0')}`}
         </span>
         <span className="rounded-full bg-slate-900/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600 dark:bg-white/10 dark:text-slate-300">
           {account.priority || 'Medium'}

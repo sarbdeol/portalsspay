@@ -17,7 +17,8 @@ const fileBaseName = (account) => {
 export function buildAccountRows(account) {
   return [
     ['Section', 'Field', 'Value'],
-    ['Basic', 'ID', account.id],
+    ['Basic', 'Bank ID', account.bankCode || `BNK-${String(account.id).padStart(4, '0')}`],
+    ['Basic', 'Internal ID', account.id],
     ['Basic', 'Bank', account.bankName],
     ['Basic', 'Account Type', account.accountType],
     ['Basic', 'Holder Name', account.holderName],

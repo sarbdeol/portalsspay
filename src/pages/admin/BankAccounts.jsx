@@ -22,8 +22,19 @@ export default function BankAccounts({ scope = 'admin' }) {
   const { data: merchants = [] } = useMerchants();
   const { create, update, remove, toggle } = useAccountMutations();
 
+  const formatBankId = (id) => `BNK-${String(id).padStart(4, '0')}`;
+
   const columns = [
-    { key: 'bankName', label: 'Bank', render: (row) => <span className="font-bold">#{row.id} • {row.bankName}</span> },
+    {
+      key: 'bankCode',
+      label: 'Bank ID',
+      render: (row) => (
+        <span className="inline-flex items-center rounded-xl bg-slate-950 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-white dark:bg-white dark:text-slate-950">
+          {formatBankId(row.id)}
+        </span>
+      ),
+    },
+    { key: 'bankName', label: 'Bank' },
     { key: 'accountType', label: 'Type' },
     {
       key: 'accountNumber',

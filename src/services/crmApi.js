@@ -69,6 +69,7 @@ const splitTags = (value) => {
 
 const fromAccount = (row) => ({
   id: row.id,
+  bankCode: `BNK-${String(row.id).padStart(4, '0')}`,
   bankName: row.bank_name,
   holderName: row.holder_name,
   companyName: row.company_name || '',
