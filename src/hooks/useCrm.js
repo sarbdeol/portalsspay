@@ -52,6 +52,7 @@ export function useMerchantMutations() {
     update: useMutation({ mutationFn: ({ id, values }) => crmApi.updateMerchant(id, values), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: crmApi.deleteMerchant, onSuccess: invalidate }),
     toggle: useMutation({ mutationFn: crmApi.toggleMerchant, onSuccess: invalidate }),
+    resetPassword: useMutation({ mutationFn: ({ id, password }) => crmApi.resetMerchantPassword(id, password), onSuccess: invalidate }),
   };
 }
 

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, User as UserIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { useToast } from '../../components/ui/Toast.jsx';
 import { useAuthStore } from '../../store/authStore.js';
 
 const schema = z.object({
-  email: z.string().email('Enter a valid email'),
+  email: z.string().min(1, 'Username or email is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -43,7 +43,7 @@ export default function Login() {
     >
       <h2 className="text-center text-2xl font-bold tracking-tight">Login</h2>
       <div className="mt-6 space-y-4">
-        <Input label="Email" icon={Mail} placeholder="you@company.in" {...register('email')} error={errors.email?.message} />
+        <Input label="Username or Email" icon={UserIcon} placeholder="username" {...register('email')} error={errors.email?.message} />
         <Input label="Password" icon={Lock} type="password" placeholder="Enter password" {...register('password')} error={errors.password?.message} />
       </div>
       <Button type="submit" disabled={loading} className="mt-6 h-12 w-full">

@@ -5,35 +5,34 @@ import Button from '../ui/Button.jsx';
 import Input from '../ui/Input.jsx';
 
 const createSchema = z.object({
-  email: z.string().email('Valid username (email) is required'),
+  username: z.string().min(2, 'Username is required'),
   password: z.string().min(4, 'Password must be 4+ characters'),
+});
+
+const editSchema = z.object({
   name: z.string().optional(),
+  username: z.string().optional(),
+  email: z.string().optional(),
+  password: z.string().min(4, 'Password must be 4+ characters').optional().or(z.literal('')),
   agentId: z.string().optional(),
   city: z.string().optional(),
   volume: z.string().optional(),
 });
 
-const editSchema = z.object({
-  name: z.string().min(2, 'Merchant name is required'),
-  email: z.string().email('Valid email is required'),
-  password: z.string().min(4, 'Password must be 4+ characters').optional().or(z.literal('')),
-  agentId: z.string().optional(),
-  city: z.string().min(2, 'City is required'),
-  volume: z.string().optional(),
-});
-
 export default function MerchantForm({ agents = [], initialValues, onSubmit, submitLabel = 'Save Merchant' }) {
   const isEdit = Boolean(initialValues);
-  const defaultValues = {
-    name: '',
-    email: '',
-    password: '',
-    agentId: '',
-    city: '',
-    volume: 'INR 0',
-    ...initialValues,
-  };
-  defaultValues.agentId = initialValues?.agentId || agents.find((agent) => agent.name === initialValues?.agent)?.id || '';
+  const defaultValues = isEdit
+    ? {
+        name: '',
+        username: '',
+        email: '',
+        password: '',
+        agentId: initialValues?.agentId || agents.find((agent) => agent.name === initialValues?.agent)?.id || '',
+        city: '',
+        volume: 'INR 0',
+        ...initialValues,
+      }
+    : { username: '', password: '' };
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(isEdit ? editSchema : createSchema),
@@ -43,7 +42,7 @@ export default function MerchantForm({ agents = [], initialValues, onSubmit, sub
   if (!isEdit) {
     return (
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <Input label="Username" placeholder="merchant@company.in" {...register('email')} error={errors.email?.message} />
+        <Input label="Username" placeholder="merchant_name" {...register('username')} error={errors.username?.message} />
         <Input label="Password" type="password" {...register('password')} error={errors.password?.message} />
         <Button type="submit">{submitLabel}</Button>
       </form>
@@ -53,6 +52,7 @@ export default function MerchantForm({ agents = [], initialValues, onSubmit, sub
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
       <Input label="Merchant Name" {...register('name')} error={errors.name?.message} />
+      <Input label="Username" {...register('username')} error={errors.username?.message} />
       <Input label="Email" {...register('email')} error={errors.email?.message} />
       <Input label="New Password" type="password" {...register('password')} error={errors.password?.message} />
       <label className="group block">

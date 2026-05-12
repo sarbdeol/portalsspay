@@ -4,6 +4,7 @@ import { apiClient } from './apiClient.js';
 const fromAgent = (row) => ({
   id: row.id,
   name: row.name,
+  username: row.username,
   email: row.email,
   mobile: row.mobile,
   whatsapp: row.whatsapp,
@@ -16,16 +17,16 @@ const fromAgent = (row) => ({
 });
 
 const toAgent = (values) => {
-  const payload = {
-    full_name: values.name,
-    email: values.email,
-    mobile: values.mobile,
-    whatsapp: values.whatsapp,
-    telegram: values.telegram,
-    address: values.address,
-    notes: values.notes,
-    status: values.status,
-  };
+  const payload = {};
+  if (values.username !== undefined) payload.username = values.username;
+  if (values.name !== undefined) payload.full_name = values.name;
+  if (values.email !== undefined) payload.email = values.email;
+  if (values.mobile !== undefined) payload.mobile = values.mobile;
+  if (values.whatsapp !== undefined) payload.whatsapp = values.whatsapp;
+  if (values.telegram !== undefined) payload.telegram = values.telegram;
+  if (values.address !== undefined) payload.address = values.address;
+  if (values.notes !== undefined) payload.notes = values.notes;
+  if (values.status !== undefined) payload.status = values.status;
   if (values.password) payload.password = values.password;
   return payload;
 };
@@ -34,6 +35,7 @@ const toAgent = (values) => {
 const fromMerchant = (row) => ({
   id: row.id,
   name: row.name,
+  username: row.username,
   email: row.email,
   agentId: row.agent_id ?? null,
   agent: row.agent_name || '',
@@ -44,14 +46,14 @@ const fromMerchant = (row) => ({
 });
 
 const toMerchant = (values) => {
-  const payload = {
-    full_name: values.name,
-    email: values.email,
-    agent_id: values.agentId || null,
-    city: values.city,
-    volume: values.volume,
-    status: values.status,
-  };
+  const payload = {};
+  if (values.username !== undefined) payload.username = values.username;
+  if (values.name !== undefined) payload.full_name = values.name;
+  if (values.email !== undefined) payload.email = values.email;
+  if (values.agentId !== undefined) payload.agent_id = values.agentId || null;
+  if (values.city !== undefined) payload.city = values.city;
+  if (values.volume !== undefined) payload.volume = values.volume;
+  if (values.status !== undefined) payload.status = values.status;
   if (values.password) payload.password = values.password;
   return payload;
 };
@@ -184,6 +186,8 @@ export const crmApi = {
   updateMerchant: (id, values) => patch(`/merchants/${id}/`, toMerchant(values)).then(fromMerchant),
   deleteMerchant: (id) => del(`/merchants/${id}/`),
   toggleMerchant: (id) => post(`/merchants/${id}/toggle_status/`).then(fromMerchant),
+  resetMerchantPassword: (id, password = 'demo1234') =>
+    post(`/merchants/${id}/reset_password/`, { password }),
 
   // Bank accounts
   listAccounts: (params) => get('/bank-accounts/', params).then((rows) => rows.map(fromAccount)),

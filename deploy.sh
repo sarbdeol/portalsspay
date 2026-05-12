@@ -120,11 +120,19 @@ systemctl restart sspay-api.service
 # ----------------------------------------------------------------------
 log "Installing nginx site configs"
 # ----------------------------------------------------------------------
+# If certbot has already added a `listen 443 ssl` block to an existing
+# site config, leave it alone — overwriting would wipe the HTTPS server
+# block and force you to re-run certbot every deploy.
 for site in portal.sspay.online api.sspay.online; do
-    sed "s|__APP_DIR__|${APP_DIR}|g" \
-        "$APP_DIR/deploy/nginx/${site}.conf" \
-        > "/etc/nginx/sites-available/${site}"
-    ln -sf "/etc/nginx/sites-available/${site}" "/etc/nginx/sites-enabled/${site}"
+    target="/etc/nginx/sites-available/${site}"
+    if [[ -f "$target" ]] && grep -q "managed by Certbot\|listen 443 ssl" "$target"; then
+        log "Keeping existing ${target} (certbot-managed)"
+    else
+        sed "s|__APP_DIR__|${APP_DIR}|g" \
+            "$APP_DIR/deploy/nginx/${site}.conf" \
+            > "$target"
+    fi
+    ln -sf "$target" "/etc/nginx/sites-enabled/${site}"
 done
 rm -f /etc/nginx/sites-enabled/default
 nginx -t
@@ -143,6 +151,12 @@ fi
 log "Done."
 # ----------------------------------------------------------------------
 PUBLIC_IP=$(curl -s -4 ifconfig.me || true)
+
+HAS_CERT=0
+if [[ -d "/etc/letsencrypt/live/${FRONTEND_HOST}" ]]; then
+    HAS_CERT=1
+fi
+
 cat <<EOF
 
 ────────────────────────────────────────────────────────────────────
@@ -153,7 +167,23 @@ cat <<EOF
     journalctl -u sspay-api.service -f
     /var/log/nginx/access.log  /var/log/nginx/error.log
 
-  Next steps (DNS):
+  Re-deploy after code changes:
+    sudo bash deploy.sh
+
+  Seeded login (CHANGE THE PASSWORD):
+    admin@sspay.in / demo1234
+EOF
+
+if [[ "$HAS_CERT" == "1" ]]; then
+    cat <<EOF
+
+  TLS: existing Let's Encrypt cert for ${FRONTEND_HOST} detected — nothing to do.
+────────────────────────────────────────────────────────────────────
+EOF
+else
+    cat <<EOF
+
+  Next steps (DNS + TLS — first install only):
     1. In your DNS provider for sspay.online, add A records:
          ${FRONTEND_HOST}   A   ${PUBLIC_IP:-<this-server's-IP>}
          ${BACKEND_HOST}    A   ${PUBLIC_IP:-<this-server's-IP>}
@@ -162,11 +192,6 @@ cat <<EOF
          sudo certbot --nginx \\
               -d ${FRONTEND_HOST} -d ${BACKEND_HOST} \\
               --redirect --agree-tos -m admin@sspay.online
-
-  Re-deploy after code changes:
-    sudo bash deploy.sh
-
-  Seeded login (CHANGE THE PASSWORD):
-    admin@sspay.in / demo1234
 ────────────────────────────────────────────────────────────────────
 EOF
+fi

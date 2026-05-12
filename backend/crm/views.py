@@ -225,6 +225,15 @@ class MerchantViewSet(BaseModelViewSet):
             return qs.none()
         return qs
 
+    @action(detail=True, methods=["post"])
+    def reset_password(self, request, pk=None):
+        merchant = self.get_object()
+        password = request.data.get("password", "demo1234")
+        merchant.user.set_password(password)
+        merchant.user.save()
+        log(request.user.email, "Reset merchant password", merchant.name)
+        return Response({"message": "Password reset", "temporary_password": password})
+
 
 class BankAccountViewSet(BaseModelViewSet):
     basename = "bank account"

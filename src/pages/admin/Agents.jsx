@@ -10,6 +10,11 @@ import StatusBadge from '../../components/StatusBadge.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAgents, useAgentMutations, unwrapError } from '../../hooks/useCrm.js';
 
+const generatePassword = () => {
+  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+};
+
 export default function Agents() {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, agent: null });
@@ -19,8 +24,8 @@ export default function Agents() {
 
   const columns = [
     { key: 'name', label: 'Agent' },
+    { key: 'username', label: 'Username' },
     { key: 'mobile', label: 'Mobile' },
-    { key: 'telegram', label: 'Telegram' },
     { key: 'merchants', label: 'Merchants' },
     { key: 'accounts', label: 'Accounts' },
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
@@ -39,7 +44,7 @@ export default function Agents() {
         setCredentials({
           title: 'Agent Created',
           description: 'Share these credentials with the agent.',
-          username: values.email,
+          username: values.username,
           password: values.password,
           loginUrl: `${window.location.origin}/login`,
         });
@@ -67,14 +72,17 @@ export default function Agents() {
     }
   };
 
-  const onResetPassword = async () => {
-    if (!agents.length) {
-      notify('No agents to reset', 'error');
-      return;
-    }
+  const onCopyLogin = async (agent) => {
+    const password = generatePassword();
     try {
-      await resetPassword.mutateAsync({ id: agents[0].id });
-      notify('Agent password reset');
+      await resetPassword.mutateAsync({ id: agent.id, password });
+      setCredentials({
+        title: `Login for ${agent.name}`,
+        description: 'A new password has been generated and reset. Share these credentials.',
+        username: agent.username || agent.email || agent.name,
+        password,
+        loginUrl: `${window.location.origin}/login`,
+      });
     } catch (err) {
       notify(unwrapError(err), 'error');
     }
@@ -86,12 +94,9 @@ export default function Agents() {
         title="Agents"
         eyebrow="Admin control"
         actions={
-          <>
-            <Button onClick={() => setModal({ open: true, agent: null })}>
-              <Plus size={16} /> Create Agent
-            </Button>
-            <Button variant="secondary" onClick={onResetPassword}>Reset Password</Button>
-          </>
+          <Button onClick={() => setModal({ open: true, agent: null })}>
+            <Plus size={16} /> Create Agent
+          </Button>
         }
       >
         {isLoading ? (
@@ -109,6 +114,7 @@ export default function Agents() {
             onEdit={(agent) => setModal({ open: true, agent })}
             onToggleStatus={onToggle}
             onDelete={onDelete}
+            onCopyLogin={onCopyLogin}
           />
         )}
       </Page>
