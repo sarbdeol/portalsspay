@@ -100,6 +100,17 @@ class BankAccount(models.Model):
     card_cvv = models.CharField(max_length=6, blank=True)
     atm_pin = models.CharField(max_length=10, blank=True)
 
+    # Extra internet-banking credentials (Current / Corp accounts)
+    group_id = models.CharField(max_length=120, blank=True)
+    authoriser_password = models.CharField(max_length=200, blank=True)
+    # 3-user authorization (checker/maker/authoriser) for Current/Corp
+    checker_user_id = models.CharField(max_length=120, blank=True)
+    checker_password = models.CharField(max_length=200, blank=True)
+    maker_user_id = models.CharField(max_length=120, blank=True)
+    maker_password = models.CharField(max_length=200, blank=True)
+    authoriser_user_id = models.CharField(max_length=120, blank=True)
+    authoriser_user_password = models.CharField(max_length=200, blank=True)
+
     def __str__(self):
         return f"{self.bank_name} - {self.holder_name}"
 

@@ -104,13 +104,24 @@ export default function BankAccountViewModal({ open, account, onClose }) {
       </Section>
 
       <Section title="Net Banking Credentials">
-        <Row label="Customer ID" value={account.customerId} />
         <Row label="User ID" value={account.userId} />
-        <Row label="Username" value={account.username} />
-        <Row label="Password" value={account.password} sensitive />
-        <Row label="Transaction Password" value={account.transactionPassword} sensitive />
+        <Row label="Login ID" value={account.username} />
+        <Row label="Customer ID" value={account.customerId} />
+        <Row label="Group ID" value={account.groupId} />
+        <Row label="Login Password" value={account.password} sensitive />
         <Row label="MPIN" value={account.mpin} sensitive />
+        <Row label="Transaction Password" value={account.transactionPassword} sensitive />
+        <Row label="Authoriser Password" value={account.authoriserPassword} sensitive />
         <Row label="TPIN" value={account.tpin} sensitive />
+      </Section>
+
+      <Section title="3-User Authorization">
+        <Row label="Checker User ID" value={account.checkerUserId} />
+        <Row label="Checker Password" value={account.checkerPassword} sensitive />
+        <Row label="Maker User ID" value={account.makerUserId} />
+        <Row label="Maker Password" value={account.makerPassword} sensitive />
+        <Row label="Authoriser User ID" value={account.authoriserUserId} />
+        <Row label="Authoriser User Password" value={account.authoriserUserPassword} sensitive />
       </Section>
 
       <Section title="Debit / ATM Card">

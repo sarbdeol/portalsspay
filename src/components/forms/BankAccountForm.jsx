@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
-import { Banknote, Building2, CreditCard, KeyRound, Link2, MessageSquare, ShieldCheck, Wallet } from 'lucide-react';
+import { Banknote, Building2, CreditCard, KeyRound, Link2, MessageSquare, ShieldCheck, Users, Wallet } from 'lucide-react';
 import Button from '../ui/Button.jsx';
 import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
@@ -27,12 +27,20 @@ const schema = z.object({
   upiApp: z.string().optional(),
   upiMobile: z.string().optional(),
   customerId: z.string().optional(),
+  groupId: z.string().optional(),
   userId: z.string().optional(),
   username: z.string().optional(),
   password: z.string().optional(),
   transactionPassword: z.string().optional(),
+  authoriserPassword: z.string().optional(),
   mpin: z.string().optional(),
   tpin: z.string().optional(),
+  checkerUserId: z.string().optional(),
+  checkerPassword: z.string().optional(),
+  makerUserId: z.string().optional(),
+  makerPassword: z.string().optional(),
+  authoriserUserId: z.string().optional(),
+  authoriserUserPassword: z.string().optional(),
   cardNumber: z.string().optional(),
   cardHolderName: z.string().optional(),
   cardExpiry: z.string().optional(),
@@ -97,12 +105,20 @@ export default function BankAccountForm({
     upiApp: 'PhonePe',
     upiMobile: '',
     customerId: '',
+    groupId: '',
     userId: '',
     username: '',
     password: '',
     transactionPassword: '',
+    authoriserPassword: '',
     mpin: '',
     tpin: '',
+    checkerUserId: '',
+    checkerPassword: '',
+    makerUserId: '',
+    makerPassword: '',
+    authoriserUserId: '',
+    authoriserUserPassword: '',
     cardNumber: '',
     cardHolderName: '',
     cardExpiry: '',
@@ -137,6 +153,14 @@ export default function BankAccountForm({
 
   const accountType = useWatch({ control, name: 'accountType' });
   const isCorp = accountType === 'Corp Account';
+  const isSavings = accountType === 'Savings Account';
+  const isCurrentOrCorp = !isSavings; // Current Account or Corp Account
+
+  // Stop Chrome/Edge/Safari from prefilling these with the user's portal
+  // login credentials. Using new-password on password inputs and off on the
+  // identifiers is the combination that actually works across browsers.
+  const noFillText = { autoComplete: 'off' };
+  const noFillPassword = { autoComplete: 'new-password' };
 
   const submit = (values) => {
     const normalized = {
@@ -182,14 +206,45 @@ export default function BankAccountForm({
       <Select label="UPI App Type" options={UPI_APPS} {...register('upiApp')} />
       <Input label="UPI Mobile Number" {...register('upiMobile')} />
 
-      <SectionHeading icon={KeyRound} title="Internet banking credentials" hint="Sensitive — stored encrypted on backend" />
-      <Input label="Customer ID" {...register('customerId')} />
-      <Input label="User ID" {...register('userId')} />
-      <Input label="Login Username" {...register('username')} />
-      <Input label="Login Password" type="password" {...register('password')} />
-      <Input label="Transaction Password" type="password" {...register('transactionPassword')} />
-      <Input label="MPIN" type="password" {...register('mpin')} />
-      <Input label="TPIN" type="password" {...register('tpin')} />
+      <SectionHeading
+        icon={KeyRound}
+        title="Internet banking credentials"
+        hint={isSavings ? 'Savings — login ID, password, MPIN.' : 'Current / Corp — full credential set + 3-user authorization.'}
+      />
+      {isSavings ? (
+        <>
+          {/* Decoy fields trick Chrome's autofill so the real login ID / password
+              below aren't overwritten with the portal user's saved password. */}
+          <input type="text" name="fakeusernameremembered" className="hidden" autoComplete="username" tabIndex={-1} aria-hidden="true" />
+          <input type="password" name="fakepasswordremembered" className="hidden" autoComplete="current-password" tabIndex={-1} aria-hidden="true" />
+          <Input label="User ID / Login ID" {...register('username')} {...noFillText} />
+          <Input label="Password" type="password" {...register('password')} {...noFillPassword} />
+          <Input label="MPIN" type="password" {...register('mpin')} {...noFillPassword} />
+        </>
+      ) : null}
+
+      {isCurrentOrCorp ? (
+        <>
+          <input type="text" name="fakeusernameremembered" className="hidden" autoComplete="username" tabIndex={-1} aria-hidden="true" />
+          <input type="password" name="fakepasswordremembered" className="hidden" autoComplete="current-password" tabIndex={-1} aria-hidden="true" />
+          <Input label="User ID" {...register('userId')} {...noFillText} />
+          <Input label="Login ID" {...register('username')} {...noFillText} />
+          <Input label="Customer ID" {...register('customerId')} {...noFillText} />
+          <Input label="Group ID" {...register('groupId')} {...noFillText} />
+          <Input label="Login Password" type="password" {...register('password')} {...noFillPassword} />
+          <Input label="MPIN" type="password" {...register('mpin')} {...noFillPassword} />
+          <Input label="Transaction Password" type="password" {...register('transactionPassword')} {...noFillPassword} />
+          <Input label="Authoriser Password" type="password" {...register('authoriserPassword')} {...noFillPassword} />
+
+          <SectionHeading icon={Users} title="3-user authorization" hint="Checker / Maker / Authoriser logins" />
+          <Input label="Checker User ID" {...register('checkerUserId')} {...noFillText} />
+          <Input label="Checker Password" type="password" {...register('checkerPassword')} {...noFillPassword} />
+          <Input label="Maker User ID" {...register('makerUserId')} {...noFillText} />
+          <Input label="Maker Password" type="password" {...register('makerPassword')} {...noFillPassword} />
+          <Input label="Authoriser User ID" {...register('authoriserUserId')} {...noFillText} />
+          <Input label="Authoriser User Password" type="password" {...register('authoriserUserPassword')} {...noFillPassword} />
+        </>
+      ) : null}
 
       <SectionHeading icon={CreditCard} title="Debit / ATM card" hint="Card linked to this account" />
       <Input label="Card Number" {...register('cardNumber')} />
