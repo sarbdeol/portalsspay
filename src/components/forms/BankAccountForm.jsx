@@ -179,6 +179,7 @@ export default function BankAccountForm({
       {isCorp ? (
         <>
           <Input label="Company Name" {...register('companyName')} />
+          <Input label="Account Holder Name" {...register('holderName')} />
           <Input label="Authorized Signatory" {...register('authorizedSignatory')} />
         </>
       ) : (

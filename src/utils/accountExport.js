@@ -183,7 +183,7 @@ const accountSections = (account) => {
     account.authoriserUserId || account.authoriserUserPassword
   );
   const showCard = Boolean(account.cardNumber || account.cardHolderName || account.cardExpiry || account.cardCvv || account.atmPin);
-  const showContact = Boolean(account.registeredMobile || account.recoveryEmail || account.whatsapp);
+  const showContact = Boolean(account.recoveryEmail || account.whatsapp);
 
   return [
     {
@@ -193,7 +193,9 @@ const accountSections = (account) => {
         ['IFSC', account.ifsc],
         ['Branch', account.branch],
         ['Bank Email', account.bankEmail],
-        ['Holder / Company', account.holderName || account.companyName],
+        ['Holder Name', account.holderName],
+        ['Company Name', account.companyName],
+        ['Registered Mobile', account.registeredMobile],
       ],
     },
     showCorp && {
@@ -269,7 +271,6 @@ const accountSections = (account) => {
     showContact && {
       title: 'Contact / Recovery',
       rows: [
-        ['Registered Mobile', account.registeredMobile],
         ['Recovery Email', account.recoveryEmail],
         ['WhatsApp', account.whatsapp],
       ],
