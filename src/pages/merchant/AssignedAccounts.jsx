@@ -1,12 +1,11 @@
 import { Download } from 'lucide-react';
 import { useState } from 'react';
-import AccountCredentialPanel from '../../components/AccountCredentialPanel.jsx';
 import BankAccountViewModal from '../../components/BankAccountViewModal.jsx';
 import DataTable from '../../components/DataTable.jsx';
 import Page from '../../components/Page.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useAccounts, unwrapError } from '../../hooks/useCrm.js';
-import { downloadAccountExcel } from '../../utils/accountExport.js';
+import { bankAccountExportFields, downloadAccountExcel } from '../../utils/accountExport.js';
 
 export default function AssignedAccounts() {
   const { data: rows = [], isLoading, isError, error } = useAccounts({ mine: 'true' });
@@ -59,15 +58,13 @@ export default function AssignedAccounts() {
               { key: 'status', label: 'Status' },
             ]}
             filters={['Bank Name', 'UPI App', 'Status', 'Tags']}
+            exportName="my-bank-accounts"
+            exportFields={bankAccountExportFields}
+            onRowClick={(account) => setViewAccount(account)}
             onView={(account) => setViewAccount(account)}
             onRowAction={(account) => downloadAccountExcel(account)}
             rowAction={{ label: 'Excel', icon: <Download size={14} /> }}
           />
-          <div className="grid gap-4 xl:grid-cols-2">
-            {rows.map((account) => (
-              <AccountCredentialPanel key={account.id} account={account} readOnly />
-            ))}
-          </div>
         </>
       )}
       <BankAccountViewModal

@@ -26,6 +26,22 @@ export default function Agents() {
     { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
   ];
 
+  const exportFields = [
+    { label: 'ID', value: (a) => a.id },
+    { label: 'Name', value: (a) => a.name },
+    { label: 'Username', value: (a) => a.username },
+    { label: 'Email', value: (a) => a.email },
+    { label: 'Mobile', value: (a) => a.mobile },
+    { label: 'WhatsApp', value: (a) => a.whatsapp },
+    { label: 'Telegram', value: (a) => a.telegram },
+    { label: 'Address', value: (a) => a.address },
+    { label: 'Notes', value: (a) => a.notes },
+    { label: 'Last Password', value: (a) => a.lastPassword },
+    { label: 'Merchants', value: (a) => a.merchants },
+    { label: 'Accounts', value: (a) => a.accounts },
+    { label: 'Status', value: (a) => a.status },
+  ];
+
   const saveAgent = async (values) => {
     try {
       if (modal.agent) {
@@ -104,6 +120,7 @@ export default function Agents() {
             columns={columns}
             filters={['Status', 'Date', 'Region']}
             exportName="agents"
+            exportFields={exportFields}
             onEdit={(agent) => setModal({ open: true, agent })}
             onToggleStatus={onToggle}
             onDelete={onDelete}

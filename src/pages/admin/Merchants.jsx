@@ -26,6 +26,19 @@ export default function Merchants() {
     { key: 'status', label: 'Status' },
   ];
 
+  const exportFields = [
+    { label: 'ID', value: (m) => m.id },
+    { label: 'Name', value: (m) => m.name },
+    { label: 'Username', value: (m) => m.username },
+    { label: 'Email', value: (m) => m.email },
+    { label: 'Assigned Agent', value: (m) => m.agent },
+    { label: 'City', value: (m) => m.city },
+    { label: 'Volume', value: (m) => m.volume },
+    { label: 'Last Password', value: (m) => m.lastPassword },
+    { label: 'Accounts', value: (m) => m.accounts },
+    { label: 'Status', value: (m) => m.status },
+  ];
+
   const saveMerchant = async (values) => {
     try {
       if (modal.merchant) {
@@ -104,6 +117,7 @@ export default function Merchants() {
             columns={columns}
             filters={['Agent', 'Status', 'City']}
             exportName="merchants"
+            exportFields={exportFields}
             onEdit={(merchant) => setModal({ open: true, merchant })}
             onToggleStatus={onToggle}
             onDelete={onDelete}

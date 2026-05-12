@@ -1,6 +1,5 @@
 import { Download, Plus, UserCheck } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import AccountCredentialPanel from '../../components/AccountCredentialPanel.jsx';
 import BankAccountForm from '../../components/forms/BankAccountForm.jsx';
 import BankAccountViewModal from '../../components/BankAccountViewModal.jsx';
 import DataTable from '../../components/DataTable.jsx';
@@ -10,7 +9,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAccounts, useAccountMutations, useAgents, useMerchants, unwrapError } from '../../hooks/useCrm.js';
-import { downloadAccountExcel } from '../../utils/accountExport.js';
+import { bankAccountExportFields, downloadAccountExcel } from '../../utils/accountExport.js';
 
 export default function BankAccounts({ scope = 'admin' }) {
   const { notify } = useToast();
@@ -191,6 +190,8 @@ export default function BankAccounts({ scope = 'admin' }) {
               columns={columns}
               filters={['Bank Name', 'UPI App', 'Status', 'Agent', 'Merchant', 'Date', 'Tags']}
               exportName="bank-accounts"
+              exportFields={bankAccountExportFields}
+              onRowClick={(account) => setViewAccount(account)}
               onView={(account) => setViewAccount(account)}
               onEdit={(account) => setModal({ open: true, account })}
               onToggleStatus={onToggle}
@@ -206,11 +207,6 @@ export default function BankAccounts({ scope = 'admin' }) {
                 </Button>
               }
             />
-            <div className="grid gap-4 xl:grid-cols-2">
-              {filteredRows.map((account) => (
-                <AccountCredentialPanel key={account.id} account={account} />
-              ))}
-            </div>
           </>
         )}
       </Page>
