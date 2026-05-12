@@ -1,4 +1,4 @@
-import { Copy, Download, Eye, FileText, Search } from 'lucide-react';
+import { Copy, Download, Eye, FileText, Pencil, Power, PowerOff, Search, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useMemo, useState } from 'react';
@@ -107,14 +107,14 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
                   </td>
                 ))}
                 {hasActions ? (
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {onView ? <Button variant="ghost" className="h-9 px-3" onClick={() => onView(row)}><Eye size={14} /> View</Button> : null}
-                      {onEdit ? <Button variant="ghost" className="h-9 px-3" onClick={() => onEdit(row)}>Edit</Button> : null}
-                      {onToggleStatus ? <Button variant="ghost" className="h-9 px-3" onClick={() => onToggleStatus(row)}>{row.status === 'Active' ? 'Disable' : 'Activate'}</Button> : null}
-                      {onDelete ? <Button variant="ghost" className="h-9 px-3 text-rose-600" onClick={() => onDelete(row)}>Delete</Button> : null}
-                      {onCopyLogin ? <Button variant="ghost" className="h-9 px-3 text-teal-700 dark:text-teal-300" onClick={() => onCopyLogin(row)}><Copy size={14} /> Copy Login</Button> : null}
-                      {onRowAction ? <Button variant="ghost" className="h-9 px-3 text-emerald-700 dark:text-emerald-300" onClick={() => onRowAction(row)}>{rowAction?.icon || null}{rowAction?.label || 'Action'}</Button> : null}
+                  <td className="whitespace-nowrap px-5 py-4">
+                    <div className="flex items-center gap-1">
+                      {onView ? <button type="button" onClick={() => onView(row)} title="View" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"><Eye size={15} /></button> : null}
+                      {onEdit ? <button type="button" onClick={() => onEdit(row)} title="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"><Pencil size={15} /></button> : null}
+                      {onToggleStatus ? <button type="button" onClick={() => onToggleStatus(row)} title={row.status === 'Active' ? 'Disable' : 'Activate'} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-900/5 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white">{row.status === 'Active' ? <PowerOff size={15} /> : <Power size={15} />}</button> : null}
+                      {onCopyLogin ? <button type="button" onClick={() => onCopyLogin(row)} title="Copy Login" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-teal-700 hover:bg-teal-500/10 dark:text-teal-300"><Copy size={15} /></button> : null}
+                      {onRowAction ? <button type="button" onClick={() => onRowAction(row)} title={rowAction?.label || 'Action'} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"><Download size={15} /></button> : null}
+                      {onDelete ? <button type="button" onClick={() => onDelete(row)} title="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-500/10"><Trash2 size={15} /></button> : null}
                     </div>
                   </td>
                 ) : null}
