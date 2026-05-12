@@ -155,7 +155,7 @@ export default function BankAccountViewModal({ open, account, onClose, readOnly 
       </Section>
 
       <Section title="Assignment">
-        <Row label="Agent" value={account.agent} />
+        {readOnly ? null : <Row label="Agent" value={account.agent} />}
         <Row label="Merchant" value={account.merchant} />
         <Row label="Status" value={account.status} />
         <Row label="Priority" value={account.priority} />

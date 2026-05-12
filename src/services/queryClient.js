@@ -3,8 +3,11 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
+      // Short stale window so admin-side changes (e.g. assigning a bank to a
+      // merchant) show up quickly when the merchant tabs back or remounts.
+      staleTime: 15_000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: 'always',
     },
   },
 });
