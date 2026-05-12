@@ -74,6 +74,7 @@ export default function AssignedAccounts() {
         open={Boolean(viewAccount)}
         account={viewAccount}
         onClose={() => setViewAccount(null)}
+        readOnly
       />
     </Page>
   );

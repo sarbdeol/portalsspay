@@ -75,6 +75,7 @@ export function useAccountMutations() {
     update: useMutation({ mutationFn: ({ id, values }) => crmApi.updateAccount(id, values), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: crmApi.deleteAccount, onSuccess: invalidate }),
     toggle: useMutation({ mutationFn: crmApi.toggleAccount, onSuccess: invalidate }),
+    deleteKyc: useMutation({ mutationFn: crmApi.deleteKycDocument, onSuccess: invalidate }),
   };
 }
 

@@ -1,9 +1,11 @@
-import { Download, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
+import { Download, ExternalLink, FileText, ShieldCheck, Trash2 } from 'lucide-react';
 import Button from './ui/Button.jsx';
 import CopyButton from './CopyButton.jsx';
 import Modal from './ui/Modal.jsx';
 import StatusBadge from './StatusBadge.jsx';
 import { downloadAccountExcel } from '../utils/accountExport.js';
+import { useAccountMutations, unwrapError } from '../hooks/useCrm.js';
+import { useToast } from './ui/Toast.jsx';
 
 function Row({ label, value, sensitive }) {
   if (value === '' || value === null || value === undefined) return null;
@@ -32,8 +34,21 @@ function Section({ title, children }) {
   );
 }
 
-export default function BankAccountViewModal({ open, account, onClose }) {
+export default function BankAccountViewModal({ open, account, onClose, readOnly = false }) {
+  const { notify } = useToast();
+  const { deleteKyc } = useAccountMutations();
   if (!account) return null;
+
+  const onDeleteKyc = async (doc) => {
+    const label = doc.label || doc.filename || `document #${doc.id}`;
+    if (!window.confirm(`Delete "${label}"? This permanently removes the file.`)) return;
+    try {
+      await deleteKyc.mutateAsync(doc.id);
+      notify('Document deleted', 'success');
+    } catch (err) {
+      notify(unwrapError(err), 'error');
+    }
+  };
 
   return (
     <Modal
@@ -184,16 +199,29 @@ export default function BankAccountViewModal({ open, account, onClose }) {
                     <p className="truncate text-[11px] text-slate-500">{doc.filename}{doc.uploaded_by ? ` • ${doc.uploaded_by}` : ''}</p>
                   </div>
                 </div>
-                {doc.file_url ? (
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-8 items-center gap-1 rounded-xl bg-slate-900/5 px-2 text-[11px] font-bold text-slate-700 hover:bg-slate-900/10 dark:bg-white/10 dark:text-slate-200"
-                  >
-                    View
-                  </a>
-                ) : null}
+                <div className="flex items-center gap-1">
+                  {doc.file_url ? (
+                    <a
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-8 items-center gap-1 rounded-xl bg-slate-900/5 px-2 text-[11px] font-bold text-slate-700 hover:bg-slate-900/10 dark:bg-white/10 dark:text-slate-200"
+                    >
+                      View
+                    </a>
+                  ) : null}
+                  {!readOnly ? (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteKyc(doc)}
+                      title="Delete document"
+                      disabled={deleteKyc.isPending}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-rose-600 hover:bg-rose-500/10 disabled:opacity-50"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
