@@ -6,12 +6,12 @@
 #   sudo bash deploy.sh
 #
 # Assumes:
-#   - Frontend at portal.sspay.com  (static Vite build served by nginx)
-#   - Backend  at api.sspay.com  (Django via gunicorn behind nginx)
+#   - Frontend at portal.sspay.online  (static Vite build served by nginx)
+#   - Backend  at api.sspay.online  (Django via gunicorn behind nginx)
 #   - SQLite database
 #
 # After the first run, point DNS A records for both subdomains at this server's
-# public IP, then run:  sudo certbot --nginx -d portal.sspay.com -d api.sspay.com
+# public IP, then run:  sudo certbot --nginx -d portal.sspay.online -d api.sspay.online
 
 set -euo pipefail
 
@@ -22,8 +22,8 @@ fi
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="/etc/sspay-crm.env"
-FRONTEND_HOST="portal.sspay.com"
-BACKEND_HOST="api.sspay.com"
+FRONTEND_HOST="portal.sspay.online"
+BACKEND_HOST="api.sspay.online"
 API_URL="https://${BACKEND_HOST}/api"
 
 log()  { printf "\n\033[1;36m==>\033[0m %s\n" "$*"; }
@@ -120,7 +120,7 @@ systemctl restart sspay-api.service
 # ----------------------------------------------------------------------
 log "Installing nginx site configs"
 # ----------------------------------------------------------------------
-for site in portal.sspay.com api.sspay.com; do
+for site in portal.sspay.online api.sspay.online; do
     sed "s|__APP_DIR__|${APP_DIR}|g" \
         "$APP_DIR/deploy/nginx/${site}.conf" \
         > "/etc/nginx/sites-available/${site}"
@@ -154,14 +154,14 @@ cat <<EOF
     /var/log/nginx/access.log  /var/log/nginx/error.log
 
   Next steps (DNS):
-    1. In your DNS provider for sspay.com, add A records:
+    1. In your DNS provider for sspay.online, add A records:
          ${FRONTEND_HOST}   A   ${PUBLIC_IP:-<this-server's-IP>}
          ${BACKEND_HOST}    A   ${PUBLIC_IP:-<this-server's-IP>}
     2. Wait for DNS to propagate (dig +short ${FRONTEND_HOST}).
     3. Issue TLS certificates:
          sudo certbot --nginx \\
               -d ${FRONTEND_HOST} -d ${BACKEND_HOST} \\
-              --redirect --agree-tos -m admin@sspay.com
+              --redirect --agree-tos -m admin@sspay.online
 
   Re-deploy after code changes:
     sudo bash deploy.sh

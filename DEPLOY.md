@@ -2,8 +2,8 @@
 
 One-shot script to host on an Ubuntu 22.04 / 24.04 LTS server with:
 
-- Frontend: `https://portal.sspay.com` (static Vite build, served by nginx)
-- Backend: `https://api.sspay.com` (Django via gunicorn + nginx reverse proxy)
+- Frontend: `https://portal.sspay.online` (static Vite build, served by nginx)
+- Backend: `https://api.sspay.online` (Django via gunicorn + nginx reverse proxy)
 - Database: SQLite (`backend/db.sqlite3`)
 
 ## 1. Get the code onto the server
@@ -29,7 +29,7 @@ What it does:
 1. Installs nginx, certbot, Node.js 20, Python 3 venv tooling, ufw.
 2. Creates `/etc/sspay-crm.env` (chmod 600) with a generated `DJANGO_SECRET_KEY`. Existing file is preserved.
 3. Builds a Python venv at `backend/venv`, installs `requirements.txt`, runs `migrate` and `collectstatic`.
-4. Builds the React frontend with `VITE_API_URL=https://api.sspay.com/api` so the bundle hits the right host.
+4. Builds the React frontend with `VITE_API_URL=https://api.sspay.online/api` so the bundle hits the right host.
 5. Installs `sspay-api.service` (gunicorn on `127.0.0.1:8001`) and enables it.
 6. Installs both nginx site configs and reloads nginx.
 7. Opens ports 22/80/443 via ufw.
@@ -37,14 +37,14 @@ What it does:
 
 ## 3. Point DNS
 
-In your DNS provider for `sspay.com`, create two A records pointing to the server's public IP:
+In your DNS provider for `sspay.online`, create two A records pointing to the server's public IP:
 
 ```
-portal.sspay.com   A   <server-ip>
-api.sspay.com   A   <server-ip>
+portal.sspay.online   A   <server-ip>
+api.sspay.online   A   <server-ip>
 ```
 
-Verify with `dig +short portal.sspay.com` and `dig +short api.sspay.com`.
+Verify with `dig +short portal.sspay.online` and `dig +short api.sspay.online`.
 
 ## 4. Issue TLS certificates
 
@@ -52,8 +52,8 @@ Once DNS resolves to the server:
 
 ```bash
 sudo certbot --nginx \
-    -d portal.sspay.com -d api.sspay.com \
-    --redirect --agree-tos -m admin@sspay.com
+    -d portal.sspay.online -d api.sspay.online \
+    --redirect --agree-tos -m admin@sspay.online
 ```
 
 Certbot edits the nginx configs in-place to add the `listen 443 ssl` blocks and an HTTP→HTTPS redirect. Auto-renewal is enabled by the certbot package (`systemctl list-timers | grep certbot`).
@@ -61,9 +61,9 @@ Certbot edits the nginx configs in-place to add the `listen 443 ssl` blocks and 
 ## 5. Verify
 
 ```
-https://portal.sspay.com          → React app loads
-https://api.sspay.com/api/     → DRF API root JSON (401 if not authenticated)
-https://api.sspay.com/admin/   → Django admin login
+https://portal.sspay.online          → React app loads
+https://api.sspay.online/api/     → DRF API root JSON (401 if not authenticated)
+https://api.sspay.online/admin/   → Django admin login
 ```
 
 ## Operations

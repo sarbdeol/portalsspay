@@ -235,3 +235,9 @@ Watching for file changes with StatReloader
 [11/May/2026 23:17:04] "GET /api/activity-logs/ HTTP/1.1" 200 708
 D:\2026\fintech-crm-complete\backend\config\settings.py changed, reloading.
 Watching for file changes with StatReloader
+[12/May/2026 10:38:40] "OPTIONS /api/activity-logs/ HTTP/1.1" 200 0
+[12/May/2026 10:38:40] "OPTIONS /api/bank-accounts/?mine=true HTTP/1.1" 200 0
+Unauthorized: /api/bank-accounts/
+Unauthorized: /api/activity-logs/
+[12/May/2026 10:38:40] "GET /api/bank-accounts/?mine=true HTTP/1.1" 401 183
+[12/May/2026 10:38:40] "GET /api/activity-logs/ HTTP/1.1" 401 183
