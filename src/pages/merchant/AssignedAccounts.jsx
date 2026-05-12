@@ -27,7 +27,7 @@ export default function AssignedAccounts() {
                 key: 'bankCode',
                 label: 'Bank ID',
                 render: (row) => (
-                  <span className="inline-flex items-center rounded-xl bg-slate-950 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-white dark:bg-white dark:text-slate-950">
+                  <span className="inline-flex items-center rounded-xl bg-slate-900/5 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-slate-700 dark:bg-white/10 dark:text-slate-200">
                     {row.bankCode}
                   </span>
                 ),
