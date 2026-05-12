@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import MerchantForm from '../../components/forms/MerchantForm.jsx';
 import DataTable from '../../components/DataTable.jsx';
+import LoginCredentialsModal from '../../components/LoginCredentialsModal.jsx';
 import Page from '../../components/Page.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Modal from '../../components/ui/Modal.jsx';
@@ -11,6 +12,7 @@ import { useAgents, useMerchants, useMerchantMutations, unwrapError } from '../.
 export default function Merchants() {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, merchant: null });
+  const [credentials, setCredentials] = useState(null);
   const { data: agents = [] } = useAgents();
   const { data: merchants = [], isLoading, isError, error } = useMerchants();
   const { create, update, remove, toggle } = useMerchantMutations();
@@ -29,11 +31,19 @@ export default function Merchants() {
       if (modal.merchant) {
         await update.mutateAsync({ id: modal.merchant.id, values });
         notify('Merchant updated');
+        setModal({ open: false, merchant: null });
       } else {
         await create.mutateAsync(values);
         notify('Merchant created');
+        setModal({ open: false, merchant: null });
+        setCredentials({
+          title: 'Merchant Created',
+          description: 'Share these credentials with the merchant.',
+          username: values.email,
+          password: values.password,
+          loginUrl: `${window.location.origin}/login`,
+        });
       }
-      setModal({ open: false, merchant: null });
     } catch (err) {
       notify(unwrapError(err), 'error');
     }
@@ -89,7 +99,7 @@ export default function Merchants() {
       <Modal
         open={modal.open}
         title={modal.merchant ? 'Edit Merchant' : 'Create Merchant'}
-        description="Assign agents and maintain merchant details."
+        description={modal.merchant ? 'Assign agents and maintain merchant details.' : 'Enter username and password to provision a new merchant.'}
         onClose={() => setModal({ open: false, merchant: null })}
       >
         <MerchantForm
@@ -99,6 +109,11 @@ export default function Merchants() {
           submitLabel={modal.merchant ? 'Update Merchant' : 'Create Merchant'}
         />
       </Modal>
+      <LoginCredentialsModal
+        open={Boolean(credentials)}
+        credentials={credentials}
+        onClose={() => setCredentials(null)}
+      />
     </>
   );
 }

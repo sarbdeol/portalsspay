@@ -4,7 +4,16 @@ import { z } from 'zod';
 import Button from '../ui/Button.jsx';
 import Input from '../ui/Input.jsx';
 
-const schema = z.object({
+const createSchema = z.object({
+  email: z.string().email('Valid username (email) is required'),
+  password: z.string().min(4, 'Password must be 4+ characters'),
+  name: z.string().optional(),
+  agentId: z.string().optional(),
+  city: z.string().optional(),
+  volume: z.string().optional(),
+});
+
+const editSchema = z.object({
   name: z.string().min(2, 'Merchant name is required'),
   email: z.string().email('Valid email is required'),
   password: z.string().min(4, 'Password must be 4+ characters').optional().or(z.literal('')),
@@ -14,6 +23,7 @@ const schema = z.object({
 });
 
 export default function MerchantForm({ agents = [], initialValues, onSubmit, submitLabel = 'Save Merchant' }) {
+  const isEdit = Boolean(initialValues);
   const defaultValues = {
     name: '',
     email: '',
@@ -26,15 +36,25 @@ export default function MerchantForm({ agents = [], initialValues, onSubmit, sub
   defaultValues.agentId = initialValues?.agentId || agents.find((agent) => agent.name === initialValues?.agent)?.id || '';
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(isEdit ? editSchema : createSchema),
     defaultValues,
   });
+
+  if (!isEdit) {
+    return (
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+        <Input label="Username" placeholder="merchant@company.in" {...register('email')} error={errors.email?.message} />
+        <Input label="Password" type="password" {...register('password')} error={errors.password?.message} />
+        <Button type="submit">{submitLabel}</Button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
       <Input label="Merchant Name" {...register('name')} error={errors.name?.message} />
       <Input label="Email" {...register('email')} error={errors.email?.message} />
-      <Input label={initialValues ? 'New Password' : 'Password'} type="password" {...register('password')} error={errors.password?.message} />
+      <Input label="New Password" type="password" {...register('password')} error={errors.password?.message} />
       <label className="group block">
         <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Assigned Agent</span>
         <select

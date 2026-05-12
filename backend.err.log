@@ -241,3 +241,13 @@ Unauthorized: /api/bank-accounts/
 Unauthorized: /api/activity-logs/
 [12/May/2026 10:38:40] "GET /api/bank-accounts/?mine=true HTTP/1.1" 401 183
 [12/May/2026 10:38:40] "GET /api/activity-logs/ HTTP/1.1" 401 183
+[12/May/2026 11:17:46] "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+[12/May/2026 11:17:46] "POST /api/auth/login/ HTTP/1.1" 200 580
+[12/May/2026 11:17:46] "OPTIONS /api/agents/ HTTP/1.1" 200 0
+[12/May/2026 11:17:46] "OPTIONS /api/merchants/ HTTP/1.1" 200 0
+[12/May/2026 11:17:46] "OPTIONS /api/bank-accounts/ HTTP/1.1" 200 0
+[12/May/2026 11:17:46] "OPTIONS /api/activity-logs/ HTTP/1.1" 200 0
+[12/May/2026 11:17:46] "GET /api/merchants/ HTTP/1.1" 200 137
+[12/May/2026 11:17:46] "GET /api/agents/ HTTP/1.1" 200 245
+[12/May/2026 11:17:47] "GET /api/bank-accounts/ HTTP/1.1" 200 2
+[12/May/2026 11:17:47] "GET /api/activity-logs/ HTTP/1.1" 200 708

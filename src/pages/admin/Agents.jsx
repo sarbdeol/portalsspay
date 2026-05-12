@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import AgentForm from '../../components/forms/AgentForm.jsx';
 import DataTable from '../../components/DataTable.jsx';
+import LoginCredentialsModal from '../../components/LoginCredentialsModal.jsx';
 import Page from '../../components/Page.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Modal from '../../components/ui/Modal.jsx';
@@ -12,6 +13,7 @@ import { useAgents, useAgentMutations, unwrapError } from '../../hooks/useCrm.js
 export default function Agents() {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, agent: null });
+  const [credentials, setCredentials] = useState(null);
   const { data: agents = [], isLoading, isError, error } = useAgents();
   const { create, update, remove, toggle, resetPassword } = useAgentMutations();
 
@@ -29,11 +31,19 @@ export default function Agents() {
       if (modal.agent) {
         await update.mutateAsync({ id: modal.agent.id, values });
         notify('Agent updated');
+        setModal({ open: false, agent: null });
       } else {
         await create.mutateAsync(values);
         notify('Agent created');
+        setModal({ open: false, agent: null });
+        setCredentials({
+          title: 'Agent Created',
+          description: 'Share these credentials with the agent.',
+          username: values.email,
+          password: values.password,
+          loginUrl: `${window.location.origin}/login`,
+        });
       }
-      setModal({ open: false, agent: null });
     } catch (err) {
       notify(unwrapError(err), 'error');
     }
@@ -105,7 +115,7 @@ export default function Agents() {
       <Modal
         open={modal.open}
         title={modal.agent ? 'Edit Agent' : 'Create Agent'}
-        description="Manage profile, contact, and operational notes."
+        description={modal.agent ? 'Manage profile, contact, and operational notes.' : 'Enter username and password to provision a new agent.'}
         onClose={() => setModal({ open: false, agent: null })}
       >
         <AgentForm
@@ -114,6 +124,11 @@ export default function Agents() {
           submitLabel={modal.agent ? 'Update Agent' : 'Create Agent'}
         />
       </Modal>
+      <LoginCredentialsModal
+        open={Boolean(credentials)}
+        credentials={credentials}
+        onClose={() => setCredentials(null)}
+      />
     </>
   );
 }
