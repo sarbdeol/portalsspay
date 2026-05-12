@@ -88,7 +88,10 @@ export default function AccountCredentialPanel({ account, readOnly = false }) {
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-xl bg-slate-900/5 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-slate-700 dark:bg-white/10 dark:text-slate-200">
+              {account.bankCode || `BNK-${String(account.id).padStart(4, '0')}`}
+            </span>
             <h3 className="text-lg font-bold text-slate-950 dark:text-white">{account.bankName}</h3>
             <StatusBadge status={account.status} />
           </div>
