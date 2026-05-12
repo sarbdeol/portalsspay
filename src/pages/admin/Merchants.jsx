@@ -9,18 +9,13 @@ import Modal from '../../components/ui/Modal.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAgents, useMerchants, useMerchantMutations, unwrapError } from '../../hooks/useCrm.js';
 
-const generatePassword = () => {
-  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
 export default function Merchants() {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, merchant: null });
   const [credentials, setCredentials] = useState(null);
   const { data: agents = [] } = useAgents();
   const { data: merchants = [], isLoading, isError, error } = useMerchants();
-  const { create, update, remove, toggle, resetPassword } = useMerchantMutations();
+  const { create, update, remove, toggle } = useMerchantMutations();
 
   const columns = [
     { key: 'name', label: 'Merchant' },
@@ -72,20 +67,18 @@ export default function Merchants() {
     }
   };
 
-  const onCopyLogin = async (merchant) => {
-    const password = generatePassword();
-    try {
-      await resetPassword.mutateAsync({ id: merchant.id, password });
-      setCredentials({
-        title: `Login for ${merchant.name}`,
-        description: 'A new password has been generated and reset. Share these credentials.',
-        username: merchant.username || merchant.email || merchant.name,
-        password,
-        loginUrl: `${window.location.origin}/login`,
-      });
-    } catch (err) {
-      notify(unwrapError(err), 'error');
+  const onCopyLogin = (merchant) => {
+    if (!merchant.lastPassword) {
+      notify('No saved password yet — edit the merchant and set a new password first.', 'error');
+      return;
     }
+    setCredentials({
+      title: `Login for ${merchant.name}`,
+      description: 'Share these credentials.',
+      username: merchant.username || merchant.email || merchant.name,
+      password: merchant.lastPassword,
+      loginUrl: `${window.location.origin}/login`,
+    });
   };
 
   return (

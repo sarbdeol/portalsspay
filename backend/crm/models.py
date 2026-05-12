@@ -12,6 +12,7 @@ class Profile(models.Model):
     telegram = models.CharField(max_length=80, blank=True)
     address = models.TextField(blank=True)
     notes = models.TextField(blank=True)
+    last_password = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return f"{self.user.email} ({self.role})"

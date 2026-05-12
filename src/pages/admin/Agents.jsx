@@ -10,17 +10,12 @@ import StatusBadge from '../../components/StatusBadge.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAgents, useAgentMutations, unwrapError } from '../../hooks/useCrm.js';
 
-const generatePassword = () => {
-  const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
 export default function Agents() {
   const { notify } = useToast();
   const [modal, setModal] = useState({ open: false, agent: null });
   const [credentials, setCredentials] = useState(null);
   const { data: agents = [], isLoading, isError, error } = useAgents();
-  const { create, update, remove, toggle, resetPassword } = useAgentMutations();
+  const { create, update, remove, toggle } = useAgentMutations();
 
   const columns = [
     { key: 'name', label: 'Agent' },
@@ -72,20 +67,18 @@ export default function Agents() {
     }
   };
 
-  const onCopyLogin = async (agent) => {
-    const password = generatePassword();
-    try {
-      await resetPassword.mutateAsync({ id: agent.id, password });
-      setCredentials({
-        title: `Login for ${agent.name}`,
-        description: 'A new password has been generated and reset. Share these credentials.',
-        username: agent.username || agent.email || agent.name,
-        password,
-        loginUrl: `${window.location.origin}/login`,
-      });
-    } catch (err) {
-      notify(unwrapError(err), 'error');
+  const onCopyLogin = (agent) => {
+    if (!agent.lastPassword) {
+      notify('No saved password yet — use Reset Password or edit the agent to set one.', 'error');
+      return;
     }
+    setCredentials({
+      title: `Login for ${agent.name}`,
+      description: 'Share these credentials.',
+      username: agent.username || agent.email || agent.name,
+      password: agent.lastPassword,
+      loginUrl: `${window.location.origin}/login`,
+    });
   };
 
   return (

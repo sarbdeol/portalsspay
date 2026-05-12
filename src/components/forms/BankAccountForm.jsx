@@ -19,7 +19,7 @@ const schema = z.object({
   branch: z.string().optional(),
   accountType: z.string().optional(),
   bankEmail: z.union([z.literal(''), z.string().email('Enter a valid email')]).optional(),
-  upiId: z.string().min(3, 'UPI ID is required'),
+  upiId: z.string().optional(),
   upiApp: z.string().optional(),
   upiMobile: z.string().optional(),
   customerId: z.string().optional(),
@@ -67,6 +67,8 @@ export default function BankAccountForm({
   submitLabel = 'Save Account',
   showContactSection = true,
   showOwnershipSelectors = true,
+  showAgentSelector = true,
+  showMerchantSelector = true,
 }) {
   const tagsToString = (value) => (Array.isArray(value) ? value.join(', ') : value || '');
 
@@ -138,7 +140,7 @@ export default function BankAccountForm({
       </div>
 
       <SectionHeading icon={Wallet} title="UPI details" hint="Linked UPI handle and app" />
-      <Input label="UPI ID" {...register('upiId')} error={errors.upiId?.message} />
+      <Input label="UPI ID" {...register('upiId')} />
       <Select label="UPI App Type" options={UPI_APPS} {...register('upiApp')} />
       <Input label="UPI Mobile Number" {...register('upiMobile')} />
 
@@ -161,21 +163,21 @@ export default function BankAccountForm({
       <Select label="Status" options={STATUSES} {...register('status')} />
       <Select label="Priority" options={PRIORITIES} {...register('priority')} />
       <Input label="Tags (comma separated)" {...register('tags')} />
-      {showOwnershipSelectors ? (
-        <>
-          <Select label="Agent" {...register('agentId')}>
-            <option value="">Unassigned</option>
-            {agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>{agent.name}</option>
-            ))}
-          </Select>
-          <Select label="Merchant" {...register('merchantId')}>
-            <option value="">Unassigned</option>
-            {merchants.map((merchant) => (
-              <option key={merchant.id} value={merchant.id}>{merchant.name}</option>
-            ))}
-          </Select>
-        </>
+      {showOwnershipSelectors && showAgentSelector ? (
+        <Select label="Agent" {...register('agentId')}>
+          <option value="">Unassigned</option>
+          {agents.map((agent) => (
+            <option key={agent.id} value={agent.id}>{agent.name}</option>
+          ))}
+        </Select>
+      ) : null}
+      {showOwnershipSelectors && showMerchantSelector ? (
+        <Select label="Merchant" {...register('merchantId')}>
+          <option value="">Unassigned</option>
+          {merchants.map((merchant) => (
+            <option key={merchant.id} value={merchant.id}>{merchant.name}</option>
+          ))}
+        </Select>
       ) : null}
 
       {showContactSection ? (

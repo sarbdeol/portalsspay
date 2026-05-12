@@ -58,6 +58,7 @@ class AgentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", required=False)
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     password = serializers.CharField(write_only=True, required=False, min_length=4)
+    last_password = serializers.CharField(source="user.profile.last_password", read_only=True)
     mobile = serializers.CharField(required=False, allow_blank=True, max_length=40)
     whatsapp = serializers.CharField(required=False, allow_blank=True, max_length=40)
     telegram = serializers.CharField(required=False, allow_blank=True, max_length=80)
@@ -68,7 +69,7 @@ class AgentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agent
-        fields = ["id", "name", "username", "full_name", "email", "password", "mobile", "whatsapp", "telegram", "address", "notes", "status", "merchants", "accounts"]
+        fields = ["id", "name", "username", "full_name", "email", "password", "last_password", "mobile", "whatsapp", "telegram", "address", "notes", "status", "merchants", "accounts"]
 
     def get_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
@@ -103,6 +104,7 @@ class AgentSerializer(serializers.ModelSerializer):
             role="Agent",
             mobile=validated_data.get("mobile", ""),
             whatsapp=validated_data.get("whatsapp", ""),
+            last_password=password,
         )
         return Agent.objects.create(user=user, **validated_data)
 
@@ -120,6 +122,11 @@ class AgentSerializer(serializers.ModelSerializer):
             instance.user.email = user_data["email"] or ""
         if password:
             instance.user.set_password(password)
+            profile = getattr(instance.user, "profile", None)
+            if profile is None:
+                profile = Profile.objects.create(user=instance.user, role="Agent")
+            profile.last_password = password
+            profile.save(update_fields=["last_password"])
         instance.user.save()
         return super().update(instance, validated_data)
 
@@ -131,6 +138,7 @@ class MerchantSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", required=False)
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     password = serializers.CharField(write_only=True, required=False, min_length=4)
+    last_password = serializers.CharField(source="user.profile.last_password", read_only=True)
     agent_name = serializers.CharField(source="agent.name", read_only=True)
     agent_id = serializers.PrimaryKeyRelatedField(source="agent", queryset=Agent.objects.all(), required=False, allow_null=True)
     city = serializers.CharField(required=False, allow_blank=True, max_length=100)
@@ -139,7 +147,7 @@ class MerchantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Merchant
-        fields = ["id", "name", "username", "full_name", "email", "password", "agent_id", "agent_name", "city", "volume", "status", "accounts"]
+        fields = ["id", "name", "username", "full_name", "email", "password", "last_password", "agent_id", "agent_name", "city", "volume", "status", "accounts"]
 
     def get_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
@@ -169,7 +177,7 @@ class MerchantSerializer(serializers.ModelSerializer):
         name = validated_data.pop("full_name", "")
         password = validated_data.pop("password", "demo1234")
         user = create_user(login_id, password, name=name, email=email)
-        Profile.objects.create(user=user, role="Merchant")
+        Profile.objects.create(user=user, role="Merchant", last_password=password)
         return Merchant.objects.create(user=user, **validated_data)
 
     def update(self, instance, validated_data):
@@ -186,6 +194,11 @@ class MerchantSerializer(serializers.ModelSerializer):
             instance.user.email = user_data["email"] or ""
         if password:
             instance.user.set_password(password)
+            profile = getattr(instance.user, "profile", None)
+            if profile is None:
+                profile = Profile.objects.create(user=instance.user, role="Merchant")
+            profile.last_password = password
+            profile.save(update_fields=["last_password"])
         instance.user.save()
         return super().update(instance, validated_data)
 

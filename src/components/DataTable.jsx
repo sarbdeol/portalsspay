@@ -1,4 +1,6 @@
 import { Copy, Download, FileText, Search } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useMemo, useState } from 'react';
 import { useDebounce } from '../hooks/useDebounce.js';
 import Button from './ui/Button.jsx';
@@ -21,10 +23,15 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
 
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const exportColumns = columns.filter((column) => column.exportable !== false);
+  const csvValue = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+
   const exportCsv = () => {
-    const headers = columns.map((column) => column.label);
-    const lines = filtered.map((row) => columns.map((column) => `"${String(row[column.key] ?? '').replaceAll('"', '""')}"`).join(','));
-    const blob = new Blob([[headers.join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+    const headers = ['S.No.', ...exportColumns.map((column) => column.label)];
+    const lines = filtered.map((row, index) =>
+      [csvValue(index + 1), ...exportColumns.map((column) => csvValue(row[column.key]))].join(','),
+    );
+    const blob = new Blob([[headers.map(csvValue).join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -32,7 +39,39 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
     anchor.click();
     URL.revokeObjectURL(url);
   };
-  const exportPdf = () => window.print();
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const title = exportName.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const generatedAt = new Date().toLocaleString();
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, 40, 36);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120);
+    doc.text(`Generated ${generatedAt}  •  ${filtered.length} records`, 40, 52);
+    doc.setTextColor(0);
+
+    const head = [['S.No.', ...exportColumns.map((column) => column.label)]];
+    const body = filtered.map((row, index) => [
+      String(index + 1),
+      ...exportColumns.map((column) => String(row[column.key] ?? '')),
+    ]);
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: 70,
+      margin: { left: 40, right: 40 },
+      styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+      headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      columnStyles: { 0: { halign: 'center', cellWidth: 40 } },
+    });
+
+    doc.save(`${exportName}.pdf`);
+  };
 
   return (
     <div className="surface overflow-hidden rounded-3xl shadow-ios">

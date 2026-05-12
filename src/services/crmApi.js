@@ -12,6 +12,7 @@ const fromAgent = (row) => ({
   address: row.address,
   notes: row.notes,
   status: row.status,
+  lastPassword: row.last_password || '',
   merchants: row.merchants ?? 0,
   accounts: row.accounts ?? 0,
 });
@@ -42,6 +43,7 @@ const fromMerchant = (row) => ({
   city: row.city,
   volume: row.volume,
   status: row.status,
+  lastPassword: row.last_password || '',
   accounts: row.accounts ?? 0,
 });
 

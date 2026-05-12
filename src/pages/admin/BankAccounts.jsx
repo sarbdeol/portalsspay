@@ -43,7 +43,7 @@ export default function BankAccounts({ scope = 'admin' }) {
       ),
     },
     { key: 'upiApp', label: 'UPI App' },
-    { key: 'agent', label: 'Agent' },
+    { key: 'agent', label: 'Agent', exportable: false },
     { key: 'merchant', label: 'Merchant' },
     { key: 'status', label: 'Status' },
   ];
@@ -129,6 +129,7 @@ export default function BankAccounts({ scope = 'admin' }) {
           merchants={merchants}
           onSubmit={saveAccount}
           submitLabel={modal.account ? 'Update Account' : 'Create Account'}
+          showAgentSelector={false}
         />
       </Modal>
     </>

@@ -207,6 +207,11 @@ class AgentViewSet(BaseModelViewSet):
         password = request.data.get("password", "demo1234")
         agent.user.set_password(password)
         agent.user.save()
+        profile = getattr(agent.user, "profile", None)
+        if profile is None:
+            profile = Profile.objects.create(user=agent.user, role="Agent")
+        profile.last_password = password
+        profile.save(update_fields=["last_password"])
         log(request.user.email, "Reset agent password", agent.name)
         return Response({"message": "Password reset", "temporary_password": password})
 
@@ -231,6 +236,11 @@ class MerchantViewSet(BaseModelViewSet):
         password = request.data.get("password", "demo1234")
         merchant.user.set_password(password)
         merchant.user.save()
+        profile = getattr(merchant.user, "profile", None)
+        if profile is None:
+            profile = Profile.objects.create(user=merchant.user, role="Merchant")
+        profile.last_password = password
+        profile.save(update_fields=["last_password"])
         log(request.user.email, "Reset merchant password", merchant.name)
         return Response({"message": "Password reset", "temporary_password": password})
 
@@ -251,6 +261,14 @@ class BankAccountViewSet(BaseModelViewSet):
                 return qs.filter(merchant=merchant)
             return qs.none()
         return qs
+
+    def perform_create(self, serializer):
+        # If an agent creates a bank account, auto-assign it to that agent
+        # so they can see it without admin intervention.
+        agent = getattr(self.request.user, "agent_profile", None)
+        if agent is not None and not serializer.validated_data.get("agent"):
+            serializer.validated_data["agent"] = agent
+        super().perform_create(serializer)
 
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
