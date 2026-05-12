@@ -5,7 +5,7 @@ import DataTable from '../../components/DataTable.jsx';
 import Page from '../../components/Page.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useAccounts, unwrapError } from '../../hooks/useCrm.js';
-import { bankAccountExportFields, downloadAccountExcel } from '../../utils/accountExport.js';
+import { bankAccountExportFields, downloadAccountExcel, downloadBankAccountsPdf } from '../../utils/accountExport.js';
 
 export default function AssignedAccounts() {
   const { data: rows = [], isLoading, isError, error } = useAccounts({ mine: 'true' });
@@ -60,6 +60,7 @@ export default function AssignedAccounts() {
             filters={['Bank Name', 'UPI App', 'Status', 'Tags']}
             exportName="my-bank-accounts"
             exportFields={bankAccountExportFields}
+            customPdf={(rows) => downloadBankAccountsPdf(rows, 'my-bank-accounts')}
             onRowClick={(account) => setViewAccount(account)}
             onView={(account) => setViewAccount(account)}
             onRowAction={(account) => downloadAccountExcel(account)}

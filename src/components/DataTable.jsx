@@ -23,6 +23,8 @@ export default function DataTable({
   bulkBar = null,
   exportFields,
   exportName = 'rdpanel-export',
+  customPdf,
+  customCsv,
   onRowClick,
 }) {
   const [query, setQuery] = useState('');
@@ -69,9 +71,16 @@ export default function DataTable({
   const fields = (exportFields && exportFields.length ? exportFields : fallbackFields);
   const csvValue = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
 
+  // If the user has ticked rows with checkboxes, export only those — otherwise
+  // export everything currently filtered/searched.
+  const exportRows = selectedIds.length
+    ? filtered.filter((row) => selectedSet.has(row.id))
+    : filtered;
+
   const exportCsv = () => {
+    if (customCsv) return customCsv(exportRows);
     const headers = ['S.No.', ...fields.map((field) => field.label)];
-    const lines = filtered.map((row, index) =>
+    const lines = exportRows.map((row, index) =>
       [csvValue(index + 1), ...fields.map((field) => csvValue(field.value(row)))].join(','),
     );
     // UTF-8 BOM so Excel handles unicode correctly when opened directly.
@@ -85,6 +94,7 @@ export default function DataTable({
   };
 
   const exportPdf = () => {
+    if (customPdf) return customPdf(exportRows);
     // Many fields → landscape A3 keeps the table readable.
     const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
     const title = exportName.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -104,7 +114,7 @@ export default function DataTable({
     doc.setTextColor(0);
 
     const head = [['S.No.', ...fields.map((field) => field.label)]];
-    const body = filtered.map((row, index) => [
+    const body = exportRows.map((row, index) => [
       String(index + 1),
       ...fields.map((field) => String(field.value(row) ?? '')),
     ]);
@@ -141,8 +151,12 @@ export default function DataTable({
           <input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search bank, UPI, agent, merchant, tags..." className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-slate-400 dark:text-white" />
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={exportCsv}><Download size={16} /> CSV</Button>
-          <Button variant="secondary" onClick={exportPdf}><FileText size={16} /> PDF</Button>
+          <Button variant="secondary" onClick={exportCsv}>
+            <Download size={16} /> CSV{selectedIds.length ? ` (${selectedIds.length})` : ''}
+          </Button>
+          <Button variant="secondary" onClick={exportPdf}>
+            <FileText size={16} /> PDF{selectedIds.length ? ` (${selectedIds.length})` : ''}
+          </Button>
         </div>
       </div>
 

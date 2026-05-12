@@ -9,7 +9,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useAccounts, useAccountMutations, useAgents, useMerchants, unwrapError } from '../../hooks/useCrm.js';
-import { bankAccountExportFields, downloadAccountExcel } from '../../utils/accountExport.js';
+import { bankAccountExportFields, downloadAccountExcel, downloadBankAccountsPdf } from '../../utils/accountExport.js';
 
 export default function BankAccounts({ scope = 'admin' }) {
   const { notify } = useToast();
@@ -191,6 +191,7 @@ export default function BankAccounts({ scope = 'admin' }) {
               filters={['Bank Name', 'UPI App', 'Status', 'Agent', 'Merchant', 'Date', 'Tags']}
               exportName="bank-accounts"
               exportFields={bankAccountExportFields}
+              customPdf={(rows) => downloadBankAccountsPdf(rows, 'bank-accounts')}
               onRowClick={(account) => setViewAccount(account)}
               onView={(account) => setViewAccount(account)}
               onEdit={(account) => setModal({ open: true, account })}
