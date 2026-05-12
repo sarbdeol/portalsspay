@@ -30,7 +30,6 @@ export const navigationByRole = {
   Merchant: [
     { label: 'Dashboard', to: '/merchant', icon: Gauge },
     { label: 'Assigned Accounts', to: '/merchant/accounts', icon: Landmark },
-    { label: 'Assigned Agents', to: '/merchant/agents', icon: ShieldCheck },
     { label: 'Profile', to: '/merchant/profile', icon: UserRound },
   ],
 };

@@ -19,7 +19,6 @@ import AccountForm from './pages/agent/AccountForm.jsx';
 import Profile from './pages/shared/Profile.jsx';
 import MerchantDashboard from './pages/merchant/MerchantDashboard.jsx';
 import AssignedAccounts from './pages/merchant/AssignedAccounts.jsx';
-import AssignedAgents from './pages/merchant/AssignedAgents.jsx';
 import KycUpload from './pages/public/KycUpload.jsx';
 
 export default function App() {
@@ -71,7 +70,6 @@ export default function App() {
             <Route path="/merchant" element={<DashboardLayout />}>
               <Route index element={<MerchantDashboard />} />
               <Route path="accounts" element={<AssignedAccounts />} />
-              <Route path="agents" element={<AssignedAgents />} />
               <Route path="profile" element={<Profile />} />
             </Route>
           </Route>
