@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import ActivityLog, Agent, BankAccount, Merchant, Profile
+from .models import ActivityLog, Agent, BankAccount, KycDocument, Merchant, Profile
 
 
 class LoginSerializer(serializers.Serializer):
@@ -203,9 +203,33 @@ class MerchantSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+class KycDocumentSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+    filename = serializers.SerializerMethodField()
+
+    class Meta:
+        model = KycDocument
+        fields = ["id", "label", "uploaded_by", "uploaded_at", "file", "file_url", "filename"]
+        read_only_fields = ["id", "uploaded_at", "file_url", "filename"]
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        request = self.context.get("request")
+        url = obj.file.url
+        return request.build_absolute_uri(url) if request else url
+
+    def get_filename(self, obj):
+        if not obj.file:
+            return ""
+        return obj.file.name.rsplit("/", 1)[-1]
+
+
 class BankAccountSerializer(serializers.ModelSerializer):
     agent_name = serializers.CharField(source="agent.name", read_only=True)
     merchant_name = serializers.CharField(source="merchant.name", read_only=True)
+    kyc_token = serializers.UUIDField(read_only=True)
+    kyc_documents = KycDocumentSerializer(many=True, read_only=True)
 
     class Meta:
         model = BankAccount

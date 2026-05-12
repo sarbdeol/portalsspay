@@ -20,6 +20,7 @@ import Profile from './pages/shared/Profile.jsx';
 import MerchantDashboard from './pages/merchant/MerchantDashboard.jsx';
 import AssignedAccounts from './pages/merchant/AssignedAccounts.jsx';
 import AssignedAgents from './pages/merchant/AssignedAgents.jsx';
+import KycUpload from './pages/public/KycUpload.jsx';
 
 export default function App() {
   const location = useLocation();
@@ -33,6 +34,9 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
+
+          {/* Public KYC upload page — accessed by anyone with the link */}
+          <Route path="/kyc/:token" element={<KycUpload />} />
 
           <Route element={<ProtectedRoute allowedRoles={['Admin', 'Agent', 'Merchant']} />}>
             <Route element={<DashboardLayout />}>

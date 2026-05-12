@@ -6,7 +6,7 @@ import { useDebounce } from '../hooks/useDebounce.js';
 import Button from './ui/Button.jsx';
 import StatusBadge from './StatusBadge.jsx';
 
-export default function DataTable({ columns, rows, readOnly = false, onEdit, onToggleStatus, onDelete, onCopyLogin, exportName = 'sspay-export' }) {
+export default function DataTable({ columns, rows, readOnly = false, onEdit, onToggleStatus, onDelete, onCopyLogin, exportName = 'rdpanel-export' }) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState(columns[0]?.key);
   const [page, setPage] = useState(1);

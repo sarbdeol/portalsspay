@@ -27,9 +27,9 @@ export default function DashboardLayout() {
       <aside className={cn('fixed inset-y-0 left-0 z-40 w-72 border-r border-white/50 bg-white/65 p-4 backdrop-blur-3xl transition lg:translate-x-0 dark:border-white/10 dark:bg-slate-950/70', open ? 'translate-x-0' : '-translate-x-full')}>
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-lg font-black text-white dark:bg-white dark:text-slate-950">A</div>
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-lg font-black text-white dark:bg-white dark:text-slate-950">RD</div>
             <div>
-              <p className="text-base font-black">SSPay</p>
+              <p className="text-base font-black">RD Panel</p>
               <p className="text-xs font-semibold text-slate-500">Fintech CRM</p>
             </div>
           </Link>

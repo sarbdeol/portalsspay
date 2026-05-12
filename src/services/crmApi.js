@@ -103,6 +103,9 @@ const fromAccount = (row) => ({
   agent: row.agent_name || '',
   merchant: row.merchant_name || '',
   addedDate: row.added_date,
+  kycToken: row.kyc_token || '',
+  kycUrl: row.kyc_token ? `${window.location.origin}/kyc/${row.kyc_token}` : '',
+  kycDocuments: Array.isArray(row.kyc_documents) ? row.kyc_documents : [],
 });
 
 const toAccount = (values) => ({
@@ -200,6 +203,19 @@ export const crmApi = {
 
   // Activity logs
   listActivityLogs: () => get('/activity-logs/').then((rows) => rows.map(fromActivityLog)),
+
+  // KYC (public endpoints — no auth required)
+  getKycPublic: (token) => apiClient.get(`/public/kyc/${token}/`).then((r) => r.data),
+  uploadKycDocument: (token, file, { label = '', uploadedBy = '' } = {}) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (label) form.append('label', label);
+    if (uploadedBy) form.append('uploaded_by', uploadedBy);
+    return apiClient
+      .post(`/public/kyc/${token}/upload/`, form, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then((r) => r.data);
+  },
+  deleteKycDocument: (id) => del(`/kyc-documents/${id}/`),
 
   // Me
   getMe: () => get('/me/'),

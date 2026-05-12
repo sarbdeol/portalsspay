@@ -59,13 +59,25 @@ DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=${BACKEND_HOST}
 DJANGO_CORS_ORIGINS=https://${FRONTEND_HOST}
 DJANGO_CSRF_TRUSTED_ORIGINS=https://${FRONTEND_HOST},https://${BACKEND_HOST}
+DJANGO_MEDIA_ROOT=/var/lib/sspay-crm/media
 EOF
     chmod 600 "$ENV_FILE"
     chown root:www-data "$ENV_FILE"
     log "Created ${ENV_FILE} with a generated SECRET_KEY"
 else
     log "${ENV_FILE} already exists — leaving it alone"
+    # Backfill DJANGO_MEDIA_ROOT for installs that pre-date KYC uploads
+    if ! grep -q '^DJANGO_MEDIA_ROOT=' "$ENV_FILE"; then
+        echo 'DJANGO_MEDIA_ROOT=/var/lib/sspay-crm/media' >> "$ENV_FILE"
+    fi
 fi
+
+# ----------------------------------------------------------------------
+log "Preparing media directory for user uploads"
+# ----------------------------------------------------------------------
+mkdir -p /var/lib/sspay-crm/media
+chown -R www-data:www-data /var/lib/sspay-crm
+chmod 755 /var/lib/sspay-crm /var/lib/sspay-crm/media
 
 # ----------------------------------------------------------------------
 log "Setting up backend (venv, deps, migrations, static)"

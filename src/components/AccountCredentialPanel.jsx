@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Eye, EyeOff, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
 import CopyButton from './CopyButton.jsx';
 import StatusBadge from './StatusBadge.jsx';
 
@@ -105,7 +105,7 @@ export default function AccountCredentialPanel({ account, readOnly = false }) {
             </div>
           ) : null}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {account.loginUrl ? (
             <a
               href={account.loginUrl}
@@ -118,6 +118,20 @@ export default function AccountCredentialPanel({ account, readOnly = false }) {
             </a>
           ) : null}
           <CopyButton value={account.loginUrl || ''} label="Login URL" />
+          {account.kycUrl ? (
+            <>
+              <a
+                href={account.kycUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 items-center gap-2 rounded-2xl bg-white/75 px-3 text-xs font-bold text-slate-700 shadow-sm hover:text-teal-700 dark:bg-white/10 dark:text-slate-200"
+                title="Open KYC upload page"
+              >
+                <ShieldCheck size={14} /> KYC
+              </a>
+              <CopyButton value={account.kycUrl} label="KYC Link" />
+            </>
+          ) : null}
           <CopyButton value={fullCredentials} label="Full Credentials" full />
         </div>
       </div>
@@ -146,6 +160,48 @@ export default function AccountCredentialPanel({ account, readOnly = false }) {
           <span>Remaining ₹{remaining.toLocaleString('en-IN')}</span>
         </div>
       </div>
+
+      {account.kycUrl ? (
+        <div className="mt-5 rounded-2xl border border-white/55 bg-white/60 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
+              <ShieldCheck size={16} /> KYC documents
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              {account.kycDocuments?.length || 0} uploaded
+            </span>
+          </div>
+          {account.kycDocuments?.length ? (
+            <ul className="mt-3 divide-y divide-slate-200/70 dark:divide-white/10">
+              {account.kycDocuments.map((doc) => (
+                <li key={doc.id} className="flex items-center justify-between gap-3 py-2">
+                  <div className="flex min-w-0 items-start gap-2">
+                    <FileText size={14} className="mt-1 shrink-0 text-slate-400" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{doc.label || doc.filename}</p>
+                      <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                        {doc.filename}{doc.uploaded_by ? ` • ${doc.uploaded_by}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  {doc.file_url ? (
+                    <a
+                      href={doc.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-8 items-center gap-1 rounded-xl bg-slate-900/5 px-2 text-[11px] font-bold text-slate-700 hover:bg-slate-900/10 dark:bg-white/10 dark:text-slate-200"
+                    >
+                      View
+                    </a>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-xs text-slate-400">No documents uploaded yet. Share the KYC link to collect them.</p>
+          )}
+        </div>
+      ) : null}
     </motion.article>
   );
 }

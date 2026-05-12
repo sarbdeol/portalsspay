@@ -9,11 +9,12 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from .models import ActivityLog, Agent, BankAccount, Merchant, Profile
+from .models import ActivityLog, Agent, BankAccount, KycDocument, Merchant, Profile
 from .serializers import (
     ActivityLogSerializer,
     AgentSerializer,
     BankAccountSerializer,
+    KycDocumentSerializer,
     LoginSerializer,
     MerchantSerializer,
     ProfileSerializer,
@@ -274,3 +275,80 @@ class BankAccountViewSet(BaseModelViewSet):
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ActivityLog.objects.all()
     serializer_class = ActivityLogSerializer
+
+
+# ---------------------------------------------------------------
+# Public KYC endpoints — accessed via a UUID token in the URL.
+# Anyone with the link can fetch/upload. Admin/agent UI also reads
+# documents via the authenticated bank-account endpoint.
+# ---------------------------------------------------------------
+
+MAX_KYC_UPLOAD_BYTES = 15 * 1024 * 1024  # 15 MB per file
+ALLOWED_KYC_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".heic", ".doc", ".docx"}
+
+
+def _bank_account_summary(account):
+    return {
+        "bank_name": account.bank_name,
+        "holder_name": account.holder_name,
+        "account_number_last4": (account.account_number or "")[-4:],
+        "status": account.status,
+    }
+
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def kyc_public_detail(request, token):
+    try:
+        account = BankAccount.objects.get(kyc_token=token)
+    except (BankAccount.DoesNotExist, ValueError):
+        return Response({"detail": "KYC link not found"}, status=404)
+    documents = KycDocumentSerializer(
+        account.kyc_documents.all(), many=True, context={"request": request}
+    ).data
+    return Response({"account": _bank_account_summary(account), "documents": documents})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def kyc_public_upload(request, token):
+    try:
+        account = BankAccount.objects.get(kyc_token=token)
+    except (BankAccount.DoesNotExist, ValueError):
+        return Response({"detail": "KYC link not found"}, status=404)
+
+    upload = request.FILES.get("file")
+    if not upload:
+        return Response({"detail": "No file uploaded"}, status=400)
+    if upload.size > MAX_KYC_UPLOAD_BYTES:
+        return Response({"detail": f"File exceeds {MAX_KYC_UPLOAD_BYTES // (1024 * 1024)}MB limit"}, status=400)
+
+    name = (upload.name or "").lower()
+    ext = "." + name.rsplit(".", 1)[-1] if "." in name else ""
+    if ext not in ALLOWED_KYC_EXTENSIONS:
+        return Response({"detail": f"Unsupported file type ({ext or 'unknown'})"}, status=400)
+
+    document = KycDocument.objects.create(
+        bank_account=account,
+        file=upload,
+        label=request.data.get("label", "").strip()[:160],
+        uploaded_by=request.data.get("uploaded_by", "").strip()[:160],
+    )
+    log("public", f"KYC upload for {account}", document.file.name)
+    return Response(
+        KycDocumentSerializer(document, context={"request": request}).data,
+        status=201,
+    )
+
+
+@api_view(["DELETE"])
+def kyc_document_delete(request, doc_id):
+    try:
+        document = KycDocument.objects.get(pk=doc_id)
+    except KycDocument.DoesNotExist:
+        return Response({"detail": "Document not found"}, status=404)
+    target = f"{document.bank_account} • {document.file.name}"
+    document.file.delete(save=False)
+    document.delete()
+    log(request.user.email, "Deleted KYC document", target)
+    return Response({"detail": "Deleted"})

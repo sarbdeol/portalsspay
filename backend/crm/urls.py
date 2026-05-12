@@ -8,6 +8,9 @@ from .views import (
     MerchantViewSet,
     change_password_view,
     forgot_password_view,
+    kyc_document_delete,
+    kyc_public_detail,
+    kyc_public_upload,
     login_view,
     me_view,
     reset_password_view,
@@ -25,5 +28,8 @@ urlpatterns = [
     path("auth/forgot-password/", forgot_password_view),
     path("auth/reset-password/", reset_password_view),
     path("me/", me_view),
+    path("public/kyc/<uuid:token>/", kyc_public_detail),
+    path("public/kyc/<uuid:token>/upload/", kyc_public_upload),
+    path("kyc-documents/<int:doc_id>/", kyc_document_delete),
     path("", include(router.urls)),
 ]

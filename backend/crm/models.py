@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -83,9 +85,28 @@ class BankAccount(models.Model):
     agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name="bank_accounts")
     merchant = models.ForeignKey(Merchant, on_delete=models.SET_NULL, null=True, blank=True, related_name="bank_accounts")
     added_date = models.DateField(auto_now_add=True)
+    kyc_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     def __str__(self):
         return f"{self.bank_name} - {self.holder_name}"
+
+
+def kyc_upload_path(instance, filename):
+    return f"kyc/{instance.bank_account.kyc_token}/{filename}"
+
+
+class KycDocument(models.Model):
+    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE, related_name="kyc_documents")
+    file = models.FileField(upload_to=kyc_upload_path)
+    label = models.CharField(max_length=160, blank=True)
+    uploaded_by = models.CharField(max_length=160, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.bank_account_id} • {self.label or self.file.name}"
 
 
 class ActivityLog(models.Model):
