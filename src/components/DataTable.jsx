@@ -6,7 +6,23 @@ import { useDebounce } from '../hooks/useDebounce.js';
 import Button from './ui/Button.jsx';
 import StatusBadge from './StatusBadge.jsx';
 
-export default function DataTable({ columns, rows, readOnly = false, onEdit, onToggleStatus, onDelete, onCopyLogin, onView, onRowAction, rowAction, exportName = 'rdpanel-export' }) {
+export default function DataTable({
+  columns,
+  rows,
+  readOnly = false,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+  onCopyLogin,
+  onView,
+  onRowAction,
+  rowAction,
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
+  bulkBar = null,
+  exportName = 'rdpanel-export',
+}) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState(columns[0]?.key);
   const [page, setPage] = useState(1);
@@ -23,6 +39,26 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
 
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const allFilteredSelected = filtered.length > 0 && filtered.every((row) => selectedSet.has(row.id));
+  const toggleRow = (row) => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedSet);
+    if (next.has(row.id)) next.delete(row.id); else next.add(row.id);
+    onSelectionChange([...next]);
+  };
+  const toggleAllFiltered = () => {
+    if (!onSelectionChange) return;
+    if (allFilteredSelected) {
+      const remaining = selectedIds.filter((id) => !filtered.some((row) => row.id === id));
+      onSelectionChange(remaining);
+    } else {
+      const next = new Set(selectedIds);
+      filtered.forEach((row) => next.add(row.id));
+      onSelectionChange([...next]);
+    }
+  };
   const exportColumns = columns.filter((column) => column.exportable !== false);
   const csvValue = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`;
 
@@ -86,10 +122,31 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
         </div>
       </div>
 
+      {selectable && selectedIds.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200/70 bg-teal-500/10 px-4 py-3 text-sm font-semibold text-slate-800 dark:border-white/10 dark:text-white">
+          <span>{selectedIds.length} selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {bulkBar}
+            <Button variant="ghost" className="h-9 px-3" onClick={() => onSelectionChange?.([])}>Clear</Button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full min-w-[920px] text-left">
           <thead>
             <tr className="border-b border-slate-200/70 text-xs uppercase tracking-[0.14em] text-slate-400 dark:border-white/10">
+              {selectable ? (
+                <th className="w-12 px-5 py-4">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleAllFiltered}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    title={allFilteredSelected ? 'Clear all' : 'Select all'}
+                  />
+                </th>
+              ) : null}
               {columns.map((column) => (
                 <th key={column.key} className="px-5 py-4">
                   <button type="button" onClick={() => setSortKey(column.key)} className="font-bold">{column.label}</button>
@@ -100,7 +157,17 @@ export default function DataTable({ columns, rows, readOnly = false, onEdit, onT
           </thead>
           <tbody>
             {visible.map((row) => (
-              <tr key={row.id} className="border-b border-slate-200/60 text-sm last:border-0 hover:bg-white/45 dark:border-white/10 dark:hover:bg-white/5">
+              <tr key={row.id} className={`border-b border-slate-200/60 text-sm last:border-0 hover:bg-white/45 dark:border-white/10 dark:hover:bg-white/5 ${selectedSet.has(row.id) ? 'bg-teal-500/5' : ''}`}>
+                {selectable ? (
+                  <td className="w-12 px-5 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedSet.has(row.id)}
+                      onChange={() => toggleRow(row)}
+                      className="h-4 w-4 cursor-pointer rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    />
+                  </td>
+                ) : null}
                 {columns.map((column) => (
                   <td key={column.key} className="px-5 py-4 align-middle font-medium text-slate-700 dark:text-slate-200">
                     {column.render ? column.render(row) : column.key === 'status' ? <StatusBadge status={row.status} /> : row[column.key]}

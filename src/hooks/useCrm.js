@@ -75,7 +75,22 @@ export function useAccountMutations() {
     update: useMutation({ mutationFn: ({ id, values }) => crmApi.updateAccount(id, values), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: crmApi.deleteAccount, onSuccess: invalidate }),
     toggle: useMutation({ mutationFn: crmApi.toggleAccount, onSuccess: invalidate }),
-    deleteKyc: useMutation({ mutationFn: crmApi.deleteKycDocument, onSuccess: invalidate }),
+    deleteKyc: useMutation({
+      mutationFn: crmApi.deleteKycDocument,
+      onSuccess: (_data, docId) => {
+        // Optimistic: drop the doc from every cached account list immediately
+        // so the UI updates without waiting for a refetch round-trip.
+        qc.setQueriesData({ queryKey: ['accounts'] }, (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((acc) => (
+            acc.kycDocuments?.some((d) => d.id === docId)
+              ? { ...acc, kycDocuments: acc.kycDocuments.filter((d) => d.id !== docId) }
+              : acc
+          ));
+        });
+        invalidate();
+      },
+    }),
   };
 }
 
