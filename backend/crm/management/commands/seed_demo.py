@@ -8,23 +8,23 @@ class Command(BaseCommand):
     help = "Seed demo admin, agent, merchant, and bank account data."
 
     def handle(self, *args, **options):
-        admin, _ = User.objects.get_or_create(username="admin@sspay.in", defaults={"email": "admin@sspay.in", "first_name": "Ananya", "last_name": "Rao"})
-        admin.email = "admin@sspay.in"
+        admin, _ = User.objects.get_or_create(username="admin@rdlink.online", defaults={"email": "admin@rdlink.online", "first_name": "Ananya", "last_name": "Rao"})
+        admin.email = "admin@rdlink.online"
         admin.set_password("demo1234")
         admin.is_staff = True
         admin.is_superuser = True
         admin.save()
         Profile.objects.get_or_create(user=admin, defaults={"role": "Admin", "mobile": "+91 98765 10001"})
 
-        agent_user, _ = User.objects.get_or_create(username="agent@sspay.in", defaults={"email": "agent@sspay.in", "first_name": "Rohan", "last_name": "Mehta"})
-        agent_user.email = "agent@sspay.in"
+        agent_user, _ = User.objects.get_or_create(username="agent@rdlink.online", defaults={"email": "agent@rdlink.online", "first_name": "Rohan", "last_name": "Mehta"})
+        agent_user.email = "agent@rdlink.online"
         agent_user.set_password("demo1234")
         agent_user.save()
         Profile.objects.get_or_create(user=agent_user, defaults={"role": "Agent", "mobile": "+91 98765 10002"})
-        agent, _ = Agent.objects.get_or_create(user=agent_user, defaults={"mobile": "+91 98765 10002", "whatsapp": "+91 98765 10002", "telegram": "@rohan_sspay", "address": "Bandra West, Mumbai"})
+        agent, _ = Agent.objects.get_or_create(user=agent_user, defaults={"mobile": "+91 98765 10002", "whatsapp": "+91 98765 10002", "telegram": "@rohan_rd", "address": "Bandra West, Mumbai"})
 
-        merchant_user, _ = User.objects.get_or_create(username="merchant@sspay.in", defaults={"email": "merchant@sspay.in", "first_name": "Kavya", "last_name": "Traders"})
-        merchant_user.email = "merchant@sspay.in"
+        merchant_user, _ = User.objects.get_or_create(username="merchant@rdlink.online", defaults={"email": "merchant@rdlink.online", "first_name": "Kavya", "last_name": "Traders"})
+        merchant_user.email = "merchant@rdlink.online"
         merchant_user.set_password("demo1234")
         merchant_user.save()
         Profile.objects.get_or_create(user=merchant_user, defaults={"role": "Merchant", "mobile": "+91 98765 10003"})
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 "upi_app": "PhonePe",
                 "upi_mobile": "+91 98765 10003",
                 "username": "kavya.ops",
-                "password": "SSPay@9921",
+                "password": "RDLink@9921",
                 "transaction_password": "Txn@4921",
                 "mpin": "4821",
                 "tpin": "8821",

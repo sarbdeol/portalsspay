@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# SSPay CRM — one-shot deploy script for Ubuntu 22.04 / 24.04 LTS.
+# RD Panel CRM — one-shot deploy script for Ubuntu 22.04 / 24.04 LTS.
 # Idempotent: safe to re-run after pulling new code.
 #
 # Run as root (or with sudo) from the project root:
 #   sudo bash deploy.sh
 #
 # Assumes:
-#   - Frontend at portal.sspay.online  (static Vite build served by nginx)
-#   - Backend  at api.sspay.online  (Django via gunicorn behind nginx)
+#   - Frontend at rdlink.online       (static Vite build served by nginx)
+#   - Backend  at api.rdlink.online   (Django via gunicorn behind nginx)
 #   - SQLite database
 #
-# After the first run, point DNS A records for both subdomains at this server's
-# public IP, then run:  sudo certbot --nginx -d portal.sspay.online -d api.sspay.online
+# After the first run, point DNS A records for both hostnames at this server's
+# public IP, then run:  sudo certbot --nginx -d rdlink.online -d api.rdlink.online
 
 set -euo pipefail
 
@@ -22,8 +22,8 @@ fi
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="/etc/sspay-crm.env"
-FRONTEND_HOST="portal.sspay.online"
-BACKEND_HOST="api.sspay.online"
+FRONTEND_HOST="rdlink.online"
+BACKEND_HOST="api.rdlink.online"
 API_URL="https://${BACKEND_HOST}/api"
 
 log()  { printf "\n\033[1;36m==>\033[0m %s\n" "$*"; }
@@ -65,11 +65,17 @@ EOF
     chown root:www-data "$ENV_FILE"
     log "Created ${ENV_FILE} with a generated SECRET_KEY"
 else
-    log "${ENV_FILE} already exists — leaving it alone"
+    log "${ENV_FILE} already exists — preserving SECRET_KEY but updating hosts"
     # Backfill DJANGO_MEDIA_ROOT for installs that pre-date KYC uploads
     if ! grep -q '^DJANGO_MEDIA_ROOT=' "$ENV_FILE"; then
         echo 'DJANGO_MEDIA_ROOT=/var/lib/sspay-crm/media' >> "$ENV_FILE"
     fi
+    # Migrate old sspay.online hostnames to the new rdlink.online domain.
+    # Safe / idempotent — running again after migration is a no-op.
+    sed -i \
+        -e 's|api\.sspay\.online|api.rdlink.online|g' \
+        -e 's|portal\.sspay\.online|rdlink.online|g' \
+        "$ENV_FILE"
 fi
 
 # ----------------------------------------------------------------------
@@ -98,7 +104,7 @@ venv/bin/python manage.py collectstatic --noinput
 HAS_SUPERUSER=$(venv/bin/python manage.py shell -c \
     "from django.contrib.auth.models import User; print(int(User.objects.filter(is_superuser=True).exists()))")
 if [[ "$HAS_SUPERUSER" != "1" ]]; then
-    warn "No superuser found. Seeding demo data (admin@sspay.in / demo1234)."
+    warn "No superuser found. Seeding demo data (admin@rdlink.online / demo1234)."
     warn "Change this password immediately via /admin/ or the CRM UI."
     venv/bin/python manage.py seed_demo
 fi
@@ -135,7 +141,7 @@ log "Installing nginx site configs"
 # If certbot has already added a `listen 443 ssl` block to an existing
 # site config, leave it alone — overwriting would wipe the HTTPS server
 # block and force you to re-run certbot every deploy.
-for site in portal.sspay.online api.sspay.online; do
+for site in "${FRONTEND_HOST}" "${BACKEND_HOST}"; do
     target="/etc/nginx/sites-available/${site}"
     if [[ -f "$target" ]] && grep -q "managed by Certbot\|listen 443 ssl" "$target"; then
         log "Keeping existing ${target} (certbot-managed)"
@@ -147,15 +153,16 @@ for site in portal.sspay.online api.sspay.online; do
     ln -sf "$target" "/etc/nginx/sites-enabled/${site}"
 done
 
-# Patch api.sspay.online to ensure a /media/ location block exists in EVERY
+# Patch the API site to ensure a /media/ location block exists in EVERY
 # server{} block — certbot may have duplicated the server block before we
 # added media support, so the SSL variant could be missing the alias.
-api_conf="/etc/nginx/sites-available/api.sspay.online"
+api_conf="/etc/nginx/sites-available/${BACKEND_HOST}"
 if [[ -f "$api_conf" ]]; then
-    python3 - <<'PY'
+    NGINX_API_CONF="$api_conf" python3 - <<'PY'
+import os
 import re
 
-path = "/etc/nginx/sites-available/api.sspay.online"
+path = os.environ["NGINX_API_CONF"]
 with open(path) as f:
     text = f.read()
 
@@ -180,7 +187,6 @@ def patch_block(match):
         count=1,
     )
 
-# Match each server { ... } including nested braces (one level deep is enough here).
 new_text = re.sub(
     r"server\s*\{(?:[^{}]|\{[^{}]*\})*\}",
     patch_block,
@@ -190,7 +196,7 @@ new_text = re.sub(
 if new_text != text:
     with open(path, "w") as f:
         f.write(new_text)
-    print("Patched /media/ into api.sspay.online nginx config")
+    print(f"Patched /media/ into {path}")
 PY
 fi
 
@@ -231,7 +237,7 @@ cat <<EOF
     sudo bash deploy.sh
 
   Seeded login (CHANGE THE PASSWORD):
-    admin@sspay.in / demo1234
+    admin@rdlink.online / demo1234
 EOF
 
 if [[ "$HAS_CERT" == "1" ]]; then
@@ -244,14 +250,14 @@ else
     cat <<EOF
 
   Next steps (DNS + TLS — first install only):
-    1. In your DNS provider for sspay.online, add A records:
+    1. In your DNS provider for rdlink.online, add A records:
          ${FRONTEND_HOST}   A   ${PUBLIC_IP:-<this-server's-IP>}
          ${BACKEND_HOST}    A   ${PUBLIC_IP:-<this-server's-IP>}
     2. Wait for DNS to propagate (dig +short ${FRONTEND_HOST}).
     3. Issue TLS certificates:
          sudo certbot --nginx \\
               -d ${FRONTEND_HOST} -d ${BACKEND_HOST} \\
-              --redirect --agree-tos -m admin@sspay.online
+              --redirect --agree-tos -m admin@rdlink.online
 ────────────────────────────────────────────────────────────────────
 EOF
 fi
